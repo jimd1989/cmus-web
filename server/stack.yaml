@@ -1,0 +1,7 @@
+packages:
+- .
+resolver:
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/1.yaml
+
+extra-deps:
+  - posix-escape-0.1@sha256:adbb650397cd8685ea220b40739ee80d4e8329643a98aa2993a6f13a598bd18c,1160
