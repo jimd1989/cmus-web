@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: aed5b61b56abc0cbc78de6cfdc6b628e071e39c199647bc7d8a9aee7d9a773d9
+-- hash: dddc5c09f52fc12560cca8fb7f14c9859d490bfad2f4457dcd98eb03a4630c3f
 
 name:           server
 version:        0.1.0.0
@@ -27,12 +27,12 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Models
   other-modules:
       Paths_server
   hs-source-dirs:
       src
-  default-extensions: GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
@@ -43,7 +43,9 @@ library
     , mtl
     , posix-escape
     , process
+    , stm
     , text
+    , transformers
     , wai
     , wai-extra
     , warp
@@ -55,7 +57,7 @@ executable server-exe
       Paths_server
   hs-source-dirs:
       app
-  default-extensions: GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -67,7 +69,9 @@ executable server-exe
     , posix-escape
     , process
     , server
+    , stm
     , text
+    , transformers
     , wai
     , wai-extra
     , warp
@@ -80,7 +84,7 @@ test-suite server-test
       Paths_server
   hs-source-dirs:
       test
-  default-extensions: GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -92,7 +96,9 @@ test-suite server-test
     , posix-escape
     , process
     , server
+    , stm
     , text
+    , transformers
     , wai
     , wai-extra
     , warp
