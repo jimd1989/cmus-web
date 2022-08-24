@@ -16,7 +16,7 @@ import Models (Cmus(..), testQueue)
 
 main ∷ IO ()
 main = do
-  env ← newTVarIO $ Cmus { library = [], queue = [] } 
+  env ← newTVarIO $ Cmus [] [] []
   run 1917 $ \req send → route req env >>= send
 
 route ∷ Request → TVar Cmus → IO Response

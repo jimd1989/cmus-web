@@ -45,6 +45,7 @@ default-extensions:
   - NoImplicitPrelude
   - OverloadedStrings
   - RecordWildCards
+  - TupleSections
   - UnicodeSyntax
 
 ghc-options:
