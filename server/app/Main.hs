@@ -2,8 +2,7 @@ module Main (main) where
 
 import Prelude (IO, (.), ($), (>>=), (<$>), pure)
 import Control.Concurrent.STM (newTVarIO, readTVarIO)
-import Control.Concurrent.STM.TVar (TVar, readTVar, writeTVar)
-import Control.Monad.STM (atomically)
+import Control.Concurrent.STM.TVar (TVar)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Lazy.Char8 (fromChunks)
 import Data.Text (Text)
@@ -12,25 +11,25 @@ import Network.HTTP.Types (Status, status200)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
-import Models (Cmus(..), testQueue)
+import Models (Cmus(..))
+
+import CmusRepository
+import Control.Arrow
+import Control.Monad.Except (runExceptT)
 
 main ∷ IO ()
 main = do
-  env ← newTVarIO $ Cmus [] [] []
+  env ← newTVarIO $ Cmus []
   run 1917 $ \req send → route req env >>= send
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
   (_,             "POST") → pure $ textResponse status200 "hello POST"
-  ("change" : [], "GET" ) → jsonResponse status200 <$> addToQueue ω
+  ("queue" : [] , "GET" ) → fff
   (_,             _     ) → jsonResponse status200 <$> readTVarIO ω
 
-addToQueue ∷ TVar Cmus → IO Cmus
-addToQueue α = atomically $ do
-  cmus ← readTVar α
-  let newCmus = cmus { queue = testQueue }
-  writeTVar α newCmus
-  pure newCmus
+fff ∷ IO Response
+fff = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT readQueue)
 
 textResponse ∷ Status → Text → Response
 textResponse α ω = responseLBS α headers (convert ω)
@@ -40,3 +39,10 @@ textResponse α ω = responseLBS α headers (convert ω)
 jsonResponse ∷ ToJSON a ⇒ Status → a → Response
 jsonResponse α ω = responseLBS α headers (encode ω)
   where headers = [(hContentType, "application/json")]
+
+-- addToQueue ∷ TVar Cmus → IO Cmus
+-- addToQueue α = atomically $ do
+--   cmus ← readTVar α
+--   let newCmus = cmus { queue = testQueue }
+--   writeTVar α newCmus
+--   pure newCmus

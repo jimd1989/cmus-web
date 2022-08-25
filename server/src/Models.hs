@@ -2,36 +2,12 @@ module Models where
 
 import Prelude (Show)
 import Data.Aeson (ToJSON)
-import Data.Int (Int)
 import Data.Maybe (Maybe(..))
-import Data.Monoid (Monoid(..))
-import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-data Track = Track {
-  artist ∷ Text,
-  duration ∷ Int,
-  filenum ∷ Int,
-  title ∷ Text
-} deriving (Generic, ToJSON)
-
-data Album = Album {
-  album ∷ Text,
-  genre ∷ Text,
-  year ∷ Int,
-  tracks ∷ [Track]
-} deriving (Generic, ToJSON)
-
-data Artist = Artist {
-  albumArtist ∷ Text,
-  albums ∷ [Album]
-} deriving (Generic, ToJSON)
-
 data Cmus = Cmus {
-  library ∷ [Artist],
-  files ∷ [Text],
-  queue ∷ [Track]
+  queue ∷ [InputTrack]
 } deriving (Generic, ToJSON)
 
 data InputTrack = InputTrack {
@@ -43,15 +19,32 @@ data InputTrack = InputTrack {
   inputGenre ∷ Maybe Text,
   inputYear ∷ Maybe Text,
   inputAlbumArtist ∷ Maybe Text 
-} deriving Show
+} deriving (Generic, ToJSON, Show)
 
+-- Didn't feel like importing lenses just for this
+
+setInputArtist ∷ Text → InputTrack → InputTrack
 setInputArtist α ω = ω { inputArtist = Just α }
+
+setInputDuration ∷ Text → InputTrack → InputTrack
 setInputDuration α ω = ω { inputDuration = Just α }
+
+setInputTitle ∷ Text → InputTrack → InputTrack
 setInputTitle α ω = ω { inputTitle = Just α }
+
+setInputFilename ∷ Text → InputTrack → InputTrack
 setInputFilename α ω = ω { inputFilename = Just α }
+
+setInputAlbum ∷ Text → InputTrack → InputTrack
 setInputAlbum α ω = ω { inputAlbum = Just α }
+
+setInputGenre ∷ Text → InputTrack → InputTrack
 setInputGenre α ω = ω { inputGenre = Just α }
+
+setInputYear ∷ Text → InputTrack → InputTrack
 setInputYear α ω = ω { inputYear = Just α }
+
+setInputAlbumArtist ∷ Text → InputTrack → InputTrack
 setInputAlbumArtist α ω = ω { inputAlbumArtist = Just α }
 
 blankTrack ∷ InputTrack 
@@ -65,8 +58,3 @@ blankTrack = InputTrack {
   inputYear = Nothing,
   inputAlbumArtist = Nothing
 }
-
--- readProcess "cmus-remote" ["-C", "save -q -e -" ] ""
-
-testQueue ∷ [Track]
-testQueue = [Track "Throwing Muses" 180 7 "Honeychain"]
