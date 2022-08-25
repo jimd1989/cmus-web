@@ -8,7 +8,7 @@ import Network.HTTP.Types.Status (Status)
 import System.Process (readProcess)
 import Models (Cmus, InputTrack)
 import Parse (parseCmus)
-import Transformers (transformLibrary)
+import Transformers (transformLibrary, transformQueue)
 
 readCmus ∷ MonadIO m ⇒ [String] → m Text
 readCmus α = liftIO $ pack <$> readProcess "cmus-remote" α ""
@@ -20,4 +20,6 @@ readLibrary ∷ (MonadError Status m, MonadIO m) ⇒ m [InputTrack]
 readLibrary = readCmus ["-C", "save -l -e -"] >>= parseCmus
 
 sync ∷ (MonadError Status m, MonadIO m) ⇒ m Cmus
-sync = transformLibrary <$> readLibrary
+sync = syncLibrary >>= syncQueue
+  where syncLibrary = transformLibrary <$> readLibrary
+        syncQueue α = readQueue >>= transformQueue α
