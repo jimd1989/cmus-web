@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2e86d6b8a3c2919048325e27b843da438380ecf0531d8356ec1ac82390a85318
+-- hash: b2435f8a8da4596fbf346e078c1368ad83c3fa2827d40f4b12bdeb1dd5a49489
 
 name:           server
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       CmusRepository
       Models
       Parse
+      Transformers
   other-modules:
       Paths_server
   hs-source-dirs:
@@ -48,6 +49,7 @@ library
     , stm
     , text
     , transformers
+    , unordered-containers
     , wai
     , wai-extra
     , warp
@@ -74,6 +76,7 @@ executable server-exe
     , stm
     , text
     , transformers
+    , unordered-containers
     , wai
     , wai-extra
     , warp
@@ -101,6 +104,7 @@ test-suite server-test
     , stm
     , text
     , transformers
+    , unordered-containers
     , wai
     , wai-extra
     , warp

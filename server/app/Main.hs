@@ -11,7 +11,8 @@ import Network.HTTP.Types (Status, status200)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
-import Models (Cmus(..))
+import Network.Wai.Middleware.Gzip (GzipSettings(..), GzipFiles(..), def, gzip)
+import Models (Cmus, cmus)
 
 import CmusRepository
 import Control.Arrow
@@ -19,17 +20,20 @@ import Control.Monad.Except (runExceptT)
 
 main ∷ IO ()
 main = do
-  env ← newTVarIO $ Cmus []
-  run 1917 $ \req send → route req env >>= send
+  env ← newTVarIO $ cmus
+  run 1917 $ gzip settings $ \req send → route req env >>= send
+
+settings ∷ GzipSettings
+settings = def { gzipFiles = GzipCompress }
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
   (_,             "POST") → pure $ textResponse status200 "hello POST"
-  ("queue" : [] , "GET" ) → fff
+  ("sync" : [] , "GET"  ) → fff
   (_,             _     ) → jsonResponse status200 <$> readTVarIO ω
 
 fff ∷ IO Response
-fff = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT readQueue)
+fff = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT sync)
 
 textResponse ∷ Status → Text → Response
 textResponse α ω = responseLBS α headers (convert ω)
