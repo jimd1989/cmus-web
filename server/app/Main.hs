@@ -29,11 +29,15 @@ settings = def { gzipFiles = GzipCompress }
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
   (_,             "POST") → pure $ textResponse status200 "hello POST"
+  ("queue" : [], "GET"  ) → ggg
   ("sync" : [] , "GET"  ) → fff
   (_,             _     ) → jsonResponse status200 <$> readTVarIO ω
 
 fff ∷ IO Response
 fff = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT sync)
+
+ggg ∷ IO Response
+ggg = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT readQueue)
 
 textResponse ∷ Status → Text → Response
 textResponse α ω = responseLBS α headers (convert ω)
