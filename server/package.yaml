@@ -41,7 +41,6 @@ default-extensions:
   - DeriveAnyClass
   - DeriveGeneric
   - FlexibleContexts
-  - GeneralizedNewtypeDeriving
   - NamedFieldPuns
   - NoImplicitPrelude
   - OverloadedStrings

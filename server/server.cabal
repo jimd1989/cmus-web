@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b2435f8a8da4596fbf346e078c1368ad83c3fa2827d40f4b12bdeb1dd5a49489
+-- hash: 7385294fe7e718678fd8b48052ea1dd8a472d4a83e36aa666f1c6129e35ae857
 
 name:           server
 version:        0.1.0.0
@@ -35,7 +35,7 @@ library
       Paths_server
   hs-source-dirs:
       src
-  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
@@ -61,7 +61,7 @@ executable server-exe
       Paths_server
   hs-source-dirs:
       app
-  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -89,7 +89,7 @@ test-suite server-test
       Paths_server
   hs-source-dirs:
       test
-  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson

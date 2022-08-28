@@ -1,13 +1,13 @@
 module Transformers where
 
-import Prelude (Eq, (.), ($), (<$>), (==), (<>), id, otherwise, pure)
+import Prelude (Eq, Monoid, (.), ($), (<$>), (==), id, pure)
 import Control.Arrow ((&&&))
 import Control.Monad.Except (MonadError, throwError)
+import Data.Function (on)
 import Data.HashMap.Strict (insert, lookup)
 import Data.Int (Int)
-import Data.List (foldr, map, sort, zip)
+import Data.List (foldr, groupBy, map, sort, zip)
 import Data.Maybe (Maybe, catMaybes, maybe)
-import Data.Text (Text)
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (swap, uncurry)
 import Network.HTTP.Types.Status (Status, status500)
@@ -26,33 +26,21 @@ transformLibrary ∷ [InputTrack] → Cmus
 transformLibrary α = transformTree flatLibrary
   where flatLibrary = foldr (uncurry transformLibraryEntry) cmus (zip [0 .. ] α)
 
--- alphabetizing error (?) Manually fixed with `sort` for now
-add' ∷ Eq a ⇒ [(a, [b])] → a → b → [(a, [b])] → [(a, [b])]
-add' α β γ [] = (β, [γ]) : α
-add' α β γ ((x, y) : ω)
-    | β == x = ((x, γ : y) : α) <> ω
-    | otherwise = add' ((x, y) : α) β γ ω
+groupByField ∷ (Eq a, Monoid a) ⇒ (b → Maybe a) → [b] → [(a, [b])]
+groupByField field = map format . group
+  where group  = groupBy (on (==) field)
+        format = traverse swap . catMaybes . map (sequence . (id &&& field))
 
-add ∷ Eq a ⇒ a → b → [(a, [b])] → [(a, [b])]
-add = add' []
-
-groupByField ∷ Eq a ⇒ (b → Maybe a) → [b] → [(a, [b])]
-groupByField field α = foldr (uncurry add) [] ω
-  where ω = map swap $ catMaybes $ map (sequence . (id &&& field)) α
-
-groupByArtist ∷ [InputTrack] → [(Text, [InputTrack])]
+groupByArtist ∷ [InputTrack] → [(Heading, [InputTrack])]
 groupByArtist α = groupByField anyArtist α
 
-transformArtist ∷ (Text, [InputTrack]) → Artist
+transformArtist ∷ (Heading, [InputTrack]) → Artist
 transformArtist (α, ω) =
-  artist (α, map transformAlbum $ groupByField inputAlbum ω)
-
-transformAlbum ∷ (Text, [InputTrack]) → Album
-transformAlbum (α, ω) = album (α, sort ω)
+  artist (α, map album $ groupByField inputAlbum ω)
 
 transformTree ∷ Cmus → Cmus
 transformTree α = α { 
-  tree = sort $ map transformArtist $ groupByArtist (library α),
+  tree = map transformArtist $ groupByArtist (sort $ library α),
   library = []
 }
                     
