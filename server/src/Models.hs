@@ -1,13 +1,13 @@
 module Models where
 
-import Prelude (Int, ($), const)
+import Prelude (Int, ($), (<>), const)
 import Control.Applicative ((<|>))
 import Control.Arrow ((|||))
 import Data.Aeson (ToJSON(..), (.=), object)
 import Data.Eq (Eq)
 import Data.HashMap.Strict (HashMap, empty)
 import Data.Maybe (Maybe(..))
-import Data.Ord (Ord(..))
+import Data.Ord (Ord(..), comparing)
 import Data.Text (Text)
 import Data.Text.Read (decimal)
 import Data.Tuple (fst)
@@ -26,17 +26,17 @@ cmus ∷ Cmus
 cmus = Cmus [] [] [] empty []
 
 instance ToJSON Cmus where
-  toJSON (Cmus _ _ β _ ω) = object [ "library" .= β, "queue" .= ω ]
+  toJSON α = object [ "library" .= tree α, "queue" .= queue α ]
 
 -- Efficient tree view of album artists, falling back to normal artist tag
 data Artist = Artist { artistName ∷ Text, albums ∷ [Album] }
   deriving (Eq)
 
 instance Ord Artist where
-  (Artist α _) `compare` (Artist ω _) = α `compare` ω
+  compare = comparing artistName
 
 instance ToJSON Artist where
-  toJSON (Artist α ω) = object [ "name" .= α, "albums" .= ω ]
+  toJSON α = object [ "name" .= artistName α, "albums" .= albums α ]
 
 artist ∷ (Text, [Album]) → Artist
 artist (α, ω) = Artist α ω
@@ -47,7 +47,7 @@ data Album = Album {
 } deriving Eq
 
 instance Ord Album where
-  (Album _ _ α) `compare` (Album _ _ ω) = α `compare` ω
+  compare = comparing albumYear
 
 instance ToJSON Album where
   toJSON (Album α ω β) = object [ "title" .= α, "tracks" .= ω, "year" .= β ]
@@ -66,13 +66,20 @@ data InputTrack = InputTrack {
   inputAlbum ∷ Maybe Text,
   inputGenre ∷ Maybe Text,
   inputYear ∷ Int,
+  inputDiscNumber ∷ Int,
+  inputTrackNumber ∷ Int,
   inputAlbumArtist ∷ Maybe Text 
 } deriving Eq
 
+instance Ord InputTrack where
+  compare = comparing inputDiscNumber <> comparing inputTrackNumber
+
 instance ToJSON InputTrack where
-  toJSON (InputTrack performer duration title _ n _ _ _ _) = 
-    object [ "performer" .= performer, "length" .= duration, 
-             "key" .= n, "title" .= title ]
+  toJSON α = object [
+    "performer" .= inputAlbumArtist α,
+    "length"    .= inputDuration α,
+    "key"       .= inputNum α,
+    "title"     .= inputTitle α ]
 
 -- Didn't feel like importing lenses just for this
 anyArtist ∷ InputTrack → Maybe Text
@@ -103,6 +110,14 @@ setInputYear ∷ Text → InputTrack → InputTrack
 setInputYear α ω = ω { inputYear = convert α }
   where convert β = (const 0 ||| fst) $ decimal β
 
+setInputDiscNumber ∷ Text → InputTrack → InputTrack
+setInputDiscNumber α ω = ω { inputYear = convert α }
+  where convert β = (const 0 ||| fst) $ decimal β
+
+setInputTrackNumber ∷ Text → InputTrack → InputTrack
+setInputTrackNumber α ω = ω { inputYear = convert α }
+  where convert β = (const 0 ||| fst) $ decimal β
+
 setInputAlbumArtist ∷ Text → InputTrack → InputTrack
 setInputAlbumArtist α ω = ω { inputAlbumArtist = Just α }
 
@@ -116,5 +131,7 @@ blankTrack = InputTrack {
   inputAlbum = Nothing,
   inputGenre = Nothing,
   inputYear = 0,
+  inputDiscNumber = 0,
+  inputTrackNumber = 0,
   inputAlbumArtist = Nothing
 }

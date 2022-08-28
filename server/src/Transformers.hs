@@ -44,7 +44,11 @@ groupByArtist ∷ [InputTrack] → [(Text, [InputTrack])]
 groupByArtist α = groupByField anyArtist α
 
 transformArtist ∷ (Text, [InputTrack]) → Artist
-transformArtist (α, ω) = artist $ (α, sort $ map album $ groupByField inputAlbum ω) 
+transformArtist (α, ω) =
+  artist (α, map transformAlbum $ groupByField inputAlbum ω)
+
+transformAlbum ∷ (Text, [InputTrack]) → Album
+transformAlbum (α, ω) = album (α, sort ω)
 
 transformTree ∷ Cmus → Cmus
 transformTree α = α { 

@@ -10,9 +10,9 @@ import Data.Text (Text)
 import Data.Attoparsec.Combinator (lookAhead)
 import Data.Attoparsec.Text (Parser, endOfInput,
   isEndOfLine, many1, manyTill, parseOnly, space, string, take, takeTill)
-import Models (InputTrack, blankTrack, setInputAlbum, 
-  setInputAlbumArtist, setInputArtist, setInputDuration, setInputFilename, 
-  setInputGenre, setInputTitle, setInputYear)
+import Models (InputTrack, blankTrack, setInputAlbum, setInputAlbumArtist,
+  setInputArtist, setInputDiscNumber, setInputDuration, setInputFilename, 
+  setInputGenre, setInputTitle, setInputTrackNumber, setInputYear)
 import Network.HTTP.Types.Status (Status, status500)
 
 tag ∷ Parser ()
@@ -34,6 +34,8 @@ field =
   (tag *> id3 setInputAlbum       "album")       <|>
   (tag *> id3 setInputGenre       "genre")       <|>
   (tag *> id3 setInputYear        "date")        <|>
+  (tag *> id3 setInputDiscNumber  "discnumber")  <|>
+  (tag *> id3 setInputTrackNumber "tracknumber") <|>
   (tag *> id3 setInputAlbumArtist "albumartist") <|> 
           id3 setInputDuration    "duration"     <|> skipField
 
