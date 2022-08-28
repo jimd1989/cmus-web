@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (IO, (.), ($), (>>=), (<$>), pure)
+import Prelude (IO, (.), ($), (>>=), (<$>), flip, pure)
 import Control.Concurrent.STM (newTVarIO, readTVarIO)
 import Control.Concurrent.STM.TVar (TVar)
 import Data.Aeson (ToJSON, encode)
@@ -28,16 +28,12 @@ settings = def { gzipFiles = GzipCompress }
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
-  (_,             "POST") → pure $ textResponse status200 "hello POST"
-  ("queue" : [], "GET"  ) → ggg
-  ("sync" : [] , "GET"  ) → fff
+  ("sync" : [] , "GET"  ) → fullSync ω
   (_,             _     ) → jsonResponse status200 <$> readTVarIO ω
 
-fff ∷ IO Response
-fff = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT sync)
-
-ggg ∷ IO Response
-ggg = ((\α → textResponse α "") ||| jsonResponse status200) <$> (runExceptT readQueue)
+fullSync ∷ TVar Cmus → IO Response
+fullSync α = handle <$> (runExceptT $ sync α)
+  where handle = flip textResponse "" ||| jsonResponse status200
 
 textResponse ∷ Status → Text → Response
 textResponse α ω = responseLBS α headers (convert ω)
@@ -47,10 +43,3 @@ textResponse α ω = responseLBS α headers (convert ω)
 jsonResponse ∷ ToJSON a ⇒ Status → a → Response
 jsonResponse α ω = responseLBS α headers (encode ω)
   where headers = [(hContentType, "application/json")]
-
--- addToQueue ∷ TVar Cmus → IO Cmus
--- addToQueue α = atomically $ do
---   cmus ← readTVar α
---   let newCmus = cmus { queue = testQueue }
---   writeTVar α newCmus
---   pure newCmus

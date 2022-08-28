@@ -1,14 +1,21 @@
 module CmusRepository where
 
-import Prelude (String, ($), (<$>), (>>=))
+import Prelude (String, (.), ($), (<$>), (>>=), pure)
 import Control.Monad.Except (MonadError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Text (Text, pack)
+import GHC.Conc (TVar, atomically, readTVarIO, writeTVar)
 import Network.HTTP.Types.Status (Status)
 import System.Process (readProcess)
 import Models (Cmus, InputTrack)
 import Parse (parseCmus)
 import Transformers (transformLibrary, transformQueue)
+
+readVar ∷ MonadIO m ⇒ TVar a → m a
+readVar = liftIO . readTVarIO
+
+writeVar ∷ MonadIO m ⇒ TVar a → a → m ()
+writeVar α = liftIO . atomically . writeTVar α
 
 readCmus ∷ MonadIO m ⇒ [String] → m Text
 readCmus α = liftIO $ pack <$> readProcess "cmus-remote" α ""
@@ -19,7 +26,9 @@ readQueue = readCmus ["-C", "save -q -e -"] >>= parseCmus
 readLibrary ∷ (MonadError Status m, MonadIO m) ⇒ m [InputTrack]
 readLibrary = readCmus ["-C", "save -l -e -"] >>= parseCmus
 
-sync ∷ (MonadError Status m, MonadIO m) ⇒ m Cmus
-sync = syncLibrary >>= syncQueue
-  where syncLibrary = transformLibrary <$> readLibrary
-        syncQueue α = readQueue >>= transformQueue α
+sync ∷ (MonadError Status m, MonadIO m) ⇒ TVar Cmus → m Cmus
+sync α = do
+  library ← transformLibrary <$> readLibrary
+  newCmus ← readQueue >>= transformQueue library
+  writeVar α newCmus
+  pure newCmus
