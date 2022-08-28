@@ -28,8 +28,15 @@ settings = def { gzipFiles = GzipCompress }
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
-  ("sync" : [] , "GET"  ) → fullSync ω
-  (_,             _     ) → jsonResponse status200 <$> readTVarIO ω
+  ("add"    : n : [], "POST"  ) → addTrack ω n
+  ("remove" : n : [], "DELETE") → fullSync ω -- Not implemented
+  ("sync"   :     [], "GET"   ) → fullSync ω
+  (_                , _       ) → jsonResponse status200 <$> readTVarIO ω
+
+
+addTrack ∷ TVar Cmus → Text → IO Response
+addTrack α n = handle <$> (runExceptT $ add α n)
+  where handle = flip textResponse "" ||| jsonResponse status200
 
 fullSync ∷ TVar Cmus → IO Response
 fullSync α = handle <$> (runExceptT $ sync α)

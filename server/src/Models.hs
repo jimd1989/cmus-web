@@ -13,12 +13,14 @@ import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import Data.Text.Read (decimal)
 import Data.Tuple (fst)
+import Data.Vector (Vector, fromList)
 import GHC.Generics (Generic)
 
 -- Global state of cmus library/queue
 -- Not all fields are exposed; some represent temporary parsing stages
 data Cmus = Cmus {
-  files ∷ [Text],
+  filesList ∷ [Text],
+  files ∷ Vector Text,
   library ∷ [InputTrack],
   tree ∷ [Artist],
   fileNums ∷ HashMap Text Int,
@@ -26,7 +28,7 @@ data Cmus = Cmus {
 } deriving Show
 
 cmus ∷ Cmus
-cmus = Cmus [] [] [] empty []
+cmus = Cmus [] (fromList []) [] [] empty []
 
 instance ToJSON Cmus where
   toJSON α = object [ "library" .= tree α, "queue" .= queue α ]

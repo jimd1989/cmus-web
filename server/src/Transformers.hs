@@ -10,12 +10,13 @@ import Data.List (foldr, groupBy, map, sort, zip)
 import Data.Maybe (Maybe, catMaybes, maybe)
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (swap, uncurry)
+import Data.Vector (fromList)
 import Network.HTTP.Types.Status (Status, status500)
 import Models
 
 transformLibraryEntry ∷ Int → InputTrack → Cmus → Cmus
-transformLibraryEntry n α (Cmus files library _ fileNums _ ) = Cmus {
-  files = (inputFilename α) : files,
+transformLibraryEntry n α (Cmus files _ library _ fileNums _ ) = Cmus {
+  filesList = (inputFilename α) : files,
   library = (setInputNum n α) : library,
   tree = [],
   fileNums = insert (inputFilename α) n fileNums,
@@ -23,7 +24,7 @@ transformLibraryEntry n α (Cmus files library _ fileNums _ ) = Cmus {
 }
 
 transformLibrary ∷ [InputTrack] → Cmus
-transformLibrary α = transformTree flatLibrary
+transformLibrary α = transformFiles $ transformTree flatLibrary
   where flatLibrary = foldr (uncurry transformLibraryEntry) cmus (zip [0 .. ] α)
 
 groupByField ∷ (Eq a, Monoid a) ⇒ (b → Maybe a) → [b] → [(a, [b])]
@@ -42,6 +43,12 @@ transformTree ∷ Cmus → Cmus
 transformTree α = α { 
   tree = map transformArtist $ groupByArtist (sort $ library α),
   library = []
+}
+
+transformFiles ∷ Cmus → Cmus
+transformFiles α = α {
+  files = fromList $ filesList α,
+  filesList = []
 }
                     
 note ∷ (MonadError Status m) ⇒ Maybe a → m a

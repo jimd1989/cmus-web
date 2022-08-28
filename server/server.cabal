@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7385294fe7e718678fd8b48052ea1dd8a472d4a83e36aa666f1c6129e35ae857
+-- hash: 99599ef7a74d0128ace33c3275dffe4dbac42bcaf59c06eac4b06970778870ef
 
 name:           server
 version:        0.1.0.0
@@ -50,6 +50,7 @@ library
     , text
     , transformers
     , unordered-containers
+    , vector
     , wai
     , wai-extra
     , warp
@@ -77,6 +78,7 @@ executable server-exe
     , text
     , transformers
     , unordered-containers
+    , vector
     , wai
     , wai-extra
     , warp
@@ -105,6 +107,7 @@ test-suite server-test
     , text
     , transformers
     , unordered-containers
+    , vector
     , wai
     , wai-extra
     , warp
