@@ -5,6 +5,7 @@ import Control.Concurrent.STM (newTVarIO, readTVarIO)
 import Control.Concurrent.STM.TVar (TVar)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Lazy.Char8 (fromChunks)
+import Data.Functor (($>))
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Types (Status, status200, status404)
@@ -29,15 +30,20 @@ settings = def { gzipFiles = GzipCompress }
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
   ("add"    : ns : [], "POST"  ) → addTrack ω ns
-  ("remove" : n  : [], "DELETE") → fullSync ω -- Not implemented
+  ("remove" : n  : [], "DELETE") → removeTrack ω n
   ("sync"   :      [], "GET"   ) → fullSync ω
   ("queue"  :      [], "GET"   ) → queue ω
+  ("play"   :      [], "PUT"   ) → play $> textResponse status200 "Toggled."
   ([]                , "GET"   ) → jsonResponse status200 <$> readTVarIO ω
   (_                 , _       ) → pure $ textResponse status404 "Invalid path."
 
 
 addTrack ∷ TVar Cmus → Text → IO Response
 addTrack α n = handle <$> (runExceptT $ add α n)
+  where handle = flip textResponse "" ||| jsonResponse status200
+
+removeTrack ∷ TVar Cmus → Text → IO Response
+removeTrack α n = handle <$> (runExceptT $ remove α n)
   where handle = flip textResponse "" ||| jsonResponse status200
 
 fullSync ∷ TVar Cmus → IO Response
