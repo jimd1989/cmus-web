@@ -19,16 +19,16 @@ import GHC.Generics (Generic)
 -- Global state of cmus library/queue
 -- Not all fields are exposed; some represent temporary parsing stages
 data Cmus = Cmus {
-  filesList ∷ [Text],
-  files ∷ Vector Text,
-  library ∷ [InputTrack],
-  tree ∷ [Artist],
-  fileNums ∷ HashMap Text Int,
-  queue ∷ [Int]
+  files ∷ Vector Text,             -- Flat vector of all filenames
+  tree ∷ [Artist],                 -- Tree view of library
+  dict ∷ HashMap Text QueuedTrack, -- Filename → Track dictionary (for queue)
+  queue ∷ [QueuedTrack],           -- Currently queued tracks
+  tmpFiles ∷ [Text],               -- only used in parsing
+  tmpTracks ∷ [InputTrack]         -- only used in parsing
 } deriving Show
 
 cmus ∷ Cmus
-cmus = Cmus [] (fromList []) [] [] empty []
+cmus = Cmus (fromList []) [] empty [] [] []
 
 instance ToJSON Cmus where
   toJSON α = object [ "library" .= tree α, "queue" .= queue α ]
@@ -54,6 +54,21 @@ instance ToJSON Album where
 album ∷ (Heading, [InputTrack]) → Album
 album (α, (x : y)) = Album α (x : y) (inputYear x)
 album (α, [])     = Album α [] 0
+
+-- Efficient view of a queued track
+
+data QueuedTrack = QueuedTrack {
+  queuedArtist ∷ Maybe Heading,
+  queuedTitle ∷ Maybe Text,
+  queuedDuration ∷ Maybe Text
+} deriving Show
+
+instance ToJSON QueuedTrack where
+  toJSON (QueuedTrack α β ω) = 
+    object [ "title" .= α, "performer" .= β, "duration" .= ω ]
+
+fromInputTrack ∷ InputTrack → QueuedTrack
+fromInputTrack α = QueuedTrack (inputArtist α) (inputTitle α) (inputDuration α)
 
 -- Heading type: text that can be grouped under
 

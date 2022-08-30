@@ -7,7 +7,7 @@ import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Lazy.Char8 (fromChunks)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
-import Network.HTTP.Types (Status, status200)
+import Network.HTTP.Types (Status, status200, status404)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
@@ -28,10 +28,12 @@ settings = def { gzipFiles = GzipCompress }
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
-  ("add"    : n : [], "POST"  ) → addTrack ω n
-  ("remove" : n : [], "DELETE") → fullSync ω -- Not implemented
-  ("sync"   :     [], "GET"   ) → fullSync ω
-  (_                , _       ) → jsonResponse status200 <$> readTVarIO ω
+  ("add"    : ns : [], "POST"  ) → addTrack ω ns
+  ("remove" : n  : [], "DELETE") → fullSync ω -- Not implemented
+  ("sync"   :      [], "GET"   ) → fullSync ω
+  ("queue"  :      [], "GET"   ) → queue ω
+  ([]                , "GET"   ) → jsonResponse status200 <$> readTVarIO ω
+  (_                 , _       ) → pure $ textResponse status404 "Invalid path."
 
 
 addTrack ∷ TVar Cmus → Text → IO Response
@@ -40,6 +42,10 @@ addTrack α n = handle <$> (runExceptT $ add α n)
 
 fullSync ∷ TVar Cmus → IO Response
 fullSync α = handle <$> (runExceptT $ sync α)
+  where handle = flip textResponse "" ||| jsonResponse status200
+
+queue ∷ TVar Cmus → IO Response
+queue α = handle <$> (runExceptT $ getQueue α)
   where handle = flip textResponse "" ||| jsonResponse status200
 
 textResponse ∷ Status → Text → Response

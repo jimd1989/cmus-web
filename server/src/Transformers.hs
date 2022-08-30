@@ -10,18 +10,20 @@ import Data.List (foldr, groupBy, map, sort, zip)
 import Data.Maybe (Maybe, catMaybes, maybe)
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (swap, uncurry)
-import Data.Vector (fromList)
+import Data.Vector (empty, fromList)
 import Network.HTTP.Types.Status (Status, status500)
 import Models
 
 transformLibraryEntry ∷ Int → InputTrack → Cmus → Cmus
-transformLibraryEntry n α (Cmus files _ library _ fileNums _ ) = Cmus {
-  filesList = (inputFilename α) : files,
-  library = (setInputNum n α) : library,
+transformLibraryEntry n α (Cmus _ _ dict _ tmpFiles tmpTracks) = Cmus {
+  files = empty,
   tree = [],
-  fileNums = insert (inputFilename α) n fileNums,
-  queue = []
+  dict = insert (inputFilename α) (fromInputTrack numberedTrack) dict,
+  queue = [],
+  tmpTracks = numberedTrack : tmpTracks,
+  tmpFiles = (inputFilename α) : tmpFiles
 }
+  where numberedTrack = setInputFilename "" $ setInputNum n α
 
 transformLibrary ∷ [InputTrack] → Cmus
 transformLibrary α = transformFiles $ transformTree flatLibrary
@@ -41,21 +43,21 @@ transformArtist (α, ω) =
 
 transformTree ∷ Cmus → Cmus
 transformTree α = α { 
-  tree = map transformArtist $ groupByArtist (sort $ library α),
-  library = []
+  tree = map transformArtist $ groupByArtist (sort $ tmpTracks α),
+  tmpTracks = []
 }
 
 transformFiles ∷ Cmus → Cmus
 transformFiles α = α {
-  files = fromList $ filesList α,
-  filesList = []
+  files = fromList $ tmpFiles α,
+  tmpFiles = []
 }
                     
 note ∷ (MonadError Status m) ⇒ Maybe a → m a
 note = maybe (throwError status500) pure
 
-find ∷ (MonadError Status m) ⇒ Cmus → InputTrack → m Int
-find α ω = note $ lookup (inputFilename ω) (fileNums α)
+find ∷ (MonadError Status m) ⇒ Cmus → InputTrack → m QueuedTrack
+find α ω = note $ lookup (inputFilename ω) (dict α)
 
 transformQueue ∷ (MonadError Status m) ⇒ Cmus → [InputTrack] → m Cmus
 transformQueue α ω = replaceQueue α <$> newQueue
