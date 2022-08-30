@@ -1,4 +1,9 @@
-module Models where
+module Models (
+  Artist, Cmus(..), Heading, InputTrack(..), QueuedTrack(..), album, anyArtist, 
+  artist, blankTrack, cmus, fromInputTrack, setInputAlbum, setInputAlbumArtist,
+  setInputArtist, setInputDiscNumber, setInputDuration, setInputFilename, 
+  setInputGenre, setInputNum, setInputTitle, setInputTrackNumber, setInputYear
+) where
 
 import Prelude (Int, Show, ($), const)
 import Control.Applicative ((<|>))
@@ -12,7 +17,7 @@ import Data.Ord (Ord(..), comparing)
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import Data.Text.Read (decimal)
-import Data.Tuple (fst)
+import Data.Tuple (fst, uncurry)
 import Data.Vector (Vector, fromList)
 import GHC.Generics (Generic)
 
@@ -41,7 +46,7 @@ instance ToJSON Artist where
   toJSON α = object [ "name" .= artistName α, "albums" .= albums α ]
 
 artist ∷ (Heading, [Album]) → Artist
-artist (α, ω) = Artist α ω
+artist = uncurry Artist
 
 -- Efficient tree view of albums
 data Album = Album { 
@@ -49,14 +54,13 @@ data Album = Album {
 } deriving Show
 
 instance ToJSON Album where
-  toJSON (Album α ω β) = object [ "title" .= α, "tracks" .= ω, "year" .= β ]
+  toJSON (Album α β ω) = object [ "title" .= α, "tracks" .= β, "year" .= ω ]
 
 album ∷ (Heading, [InputTrack]) → Album
 album (α, (x : y)) = Album α (x : y) (inputYear x)
 album (α, [])     = Album α [] 0
 
 -- Efficient view of a queued track
-
 data QueuedTrack = QueuedTrack {
   queuedArtist ∷ Maybe Heading,
   queuedTitle ∷ Maybe Text,
@@ -71,7 +75,6 @@ fromInputTrack ∷ InputTrack → QueuedTrack
 fromInputTrack α = QueuedTrack (inputArtist α) (inputTitle α) (inputDuration α)
 
 -- Heading type: text that can be grouped under
-
 newtype Heading = Heading Text
   deriving (Generic, Eq, Ord, ToJSON, Show)
 

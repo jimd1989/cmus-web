@@ -1,8 +1,10 @@
 module Main (main) where
 
 import Prelude (IO, (.), ($), (>>=), (<$>), flip, pure)
+import Control.Arrow ((|||))
 import Control.Concurrent.STM (newTVarIO, readTVarIO)
 import Control.Concurrent.STM.TVar (TVar)
+import Control.Monad.Except (ExceptT, runExceptT)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Lazy.Char8 (fromChunks)
 import Data.Functor (($>))
@@ -13,19 +15,16 @@ import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Gzip (GzipSettings(..), GzipFiles(..), def, gzip)
+import CmusRepository (add, getQueue, play, remove, sync)
 import Models (Cmus, cmus)
-
-import CmusRepository
-import Control.Arrow
-import Control.Monad.Except (runExceptT)
 
 main ∷ IO ()
 main = do
   env ← newTVarIO $ cmus
-  run 1917 $ gzip settings $ \req send → route req env >>= send
+  run 1917 $ gzip gzipSettings $ \req send → route req env >>= send
 
-settings ∷ GzipSettings
-settings = def { gzipFiles = GzipCompress }
+gzipSettings ∷ GzipSettings
+gzipSettings = def { gzipFiles = GzipCompress }
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
@@ -39,20 +38,20 @@ route α ω = case (pathInfo α, requestMethod α) of
 
 
 addTrack ∷ TVar Cmus → Text → IO Response
-addTrack α n = handle <$> (runExceptT $ add α n)
-  where handle = flip textResponse "" ||| jsonResponse status200
+addTrack α n = handle "Error adding tracks." $ add α n
 
 removeTrack ∷ TVar Cmus → Text → IO Response
-removeTrack α n = handle <$> (runExceptT $ remove α n)
-  where handle = flip textResponse "" ||| jsonResponse status200
+removeTrack α n = handle "Error removing tracks." $ remove α n
 
 fullSync ∷ TVar Cmus → IO Response
-fullSync α = handle <$> (runExceptT $ sync α)
-  where handle = flip textResponse "" ||| jsonResponse status200
+fullSync α = handle "Error syncing library." $ sync α
 
 queue ∷ TVar Cmus → IO Response
-queue α = handle <$> (runExceptT $ getQueue α)
-  where handle = flip textResponse "" ||| jsonResponse status200
+queue α = handle "Error getting queue." $ getQueue α
+
+handle ∷ ToJSON a ⇒ Text → ExceptT Status IO a → IO Response
+handle α ω = respond <$> (runExceptT ω)
+  where respond = flip textResponse α ||| jsonResponse status200
 
 textResponse ∷ Status → Text → Response
 textResponse α ω = responseLBS α headers (convert ω)

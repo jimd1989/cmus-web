@@ -1,5 +1,8 @@
 module Parse (parseCmus) where
 
+-- Reads newline-delimited cmus output into InputTrack records: a primitive
+-- representation of the cmus library that is refined further by transformers.
+
 import Prelude (($), (<$>), (*>), (<*), const, id, pure)
 import Control.Applicative ((<|>), liftA2)
 import Control.Arrow (left)
@@ -10,10 +13,10 @@ import Data.Text (Text)
 import Data.Attoparsec.Combinator (lookAhead)
 import Data.Attoparsec.Text (Parser, endOfInput,
   isEndOfLine, many1, manyTill, parseOnly, space, string, take, takeTill)
+import Network.HTTP.Types.Status (Status, status500)
 import Models (InputTrack, blankTrack, setInputAlbum, setInputAlbumArtist,
   setInputArtist, setInputDiscNumber, setInputDuration, setInputFilename, 
   setInputGenre, setInputTitle, setInputTrackNumber, setInputYear)
-import Network.HTTP.Types.Status (Status, status500)
 
 tag ∷ Parser ()
 tag = string "tag" *> space $> ()
