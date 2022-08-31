@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (IO, (.), ($), (>>=), (<$>), flip, pure)
+import Prelude (Int, IO, (.), ($), (>>=), (<$>), const, flip, id, pure)
 import Control.Arrow ((|||))
 import Control.Concurrent.STM (newTVarIO, readTVarIO)
 import Control.Concurrent.STM.TVar (TVar)
@@ -8,20 +8,28 @@ import Control.Monad.Except (ExceptT, runExceptT)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Lazy.Char8 (fromChunks)
 import Data.Functor (($>))
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Types (Status, status200, status404)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Gzip (GzipSettings(..), GzipFiles(..), def, gzip)
+import System.Environment (getArgs)
 import CmusRepository (add, getQueue, play, remove, sync)
+import Helpers ((◀), (◁), head', readInt)
 import Models (Cmus, cmus)
 
 main ∷ IO ()
 main = do
-  env ← newTVarIO $ cmus
-  run 1917 $ gzip gzipSettings $ \req send → route req env >>= send
+  env     ← newTVarIO $ cmus
+  portNum ← port
+  run portNum $ gzip gzipSettings $ \req send → route req env >>= send
+
+port ∷ IO Int
+port = (extract . parseHead) <$> getArgs
+  where parseHead = readInt ◀ pack ◁ head'
+        extract   = const 1917 ||| id
 
 gzipSettings ∷ GzipSettings
 gzipSettings = def { gzipFiles = GzipCompress }

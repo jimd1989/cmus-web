@@ -39,9 +39,9 @@ dependencies:
 
 default-extensions:
   - DefaultSignatures
-  - DeriveAnyClass
   - DeriveGeneric
   - FlexibleContexts
+  - GeneralizedNewtypeDeriving
   - NamedFieldPuns
   - NoImplicitPrelude
   - OverloadedStrings

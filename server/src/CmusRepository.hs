@@ -4,23 +4,21 @@ module CmusRepository (add, getQueue, play, remove, sync) where
 -- output to manage player state.
 
 import Prelude (Int, String, (.), ($), (-), (*>), (<$>), (>>=), pure)
-import Control.Arrow ((+++))
-import Control.Monad.Except (MonadError, liftEither)
+import Control.Monad.Except (MonadError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable (traverse_)
 import Data.Function (const)
 import Data.Functor (($>))
 import Data.Text (Text, pack, splitOn, unpack)
-import Data.Text.Read (decimal)
 import Data.Traversable (traverse)
-import Data.Tuple (fst)
 import Data.Vector ((!?))
 import GHC.Conc (TVar, atomically, readTVarIO, writeTVar)
-import Network.HTTP.Types.Status (Status, status500)
+import Network.HTTP.Types.Status (Status)
 import System.Process (readProcess)
+import Helpers (note, readInt)
 import Models (Cmus(..), InputTrack, QueuedTrack)
 import Parse (parseCmus)
-import Transformers (note, transformLibrary, transformQueue)
+import Transformers (transformLibrary, transformQueue)
 
 -- Helpers
 readVar ∷ MonadIO m ⇒ TVar a → m a
@@ -28,9 +26,6 @@ readVar = liftIO . readTVarIO
 
 writeVar ∷ MonadIO m ⇒ TVar a → a → m ()
 writeVar α = liftIO . atomically . writeTVar α
-
-readInt ∷ MonadError Status m ⇒ Text → m Int
-readInt = liftEither . (const status500 +++ fst) . decimal
 
 readInts ∷ MonadError Status m ⇒ Text → m [Int]
 readInts = traverse readInt . splitOn "-"

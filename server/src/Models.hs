@@ -5,9 +5,8 @@ module Models (
   setInputGenre, setInputNum, setInputTitle, setInputTrackNumber, setInputYear
 ) where
 
-import Prelude (Int, Show, ($), const)
+import Prelude (Int, Show, ($))
 import Control.Applicative ((<|>))
-import Control.Arrow ((|||))
 import Data.Aeson (ToJSON(..), (.=), object)
 import Data.Eq (Eq)
 import Data.HashMap.Strict (HashMap, empty)
@@ -16,10 +15,10 @@ import Data.Monoid (Monoid(..))
 import Data.Ord (Ord(..), comparing)
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
-import Data.Text.Read (decimal)
-import Data.Tuple (fst, uncurry)
+import Data.Tuple (uncurry)
 import Data.Vector (Vector, fromList)
 import GHC.Generics (Generic)
+import Helpers (readInt')
 
 -- Global state of cmus library/queue
 -- Not all fields are exposed; some represent temporary parsing stages
@@ -58,7 +57,7 @@ instance ToJSON Album where
 
 album ∷ (Heading, [InputTrack]) → Album
 album (α, (x : y)) = Album α (x : y) (inputYear x)
-album (α, [])     = Album α [] 0
+album (α, [])      = Album α [] 0
 
 -- Efficient view of a queued track
 data QueuedTrack = QueuedTrack {
@@ -139,16 +138,13 @@ setInputGenre ∷ Text → InputTrack → InputTrack
 setInputGenre α ω = ω { inputGenre = Just α }
 
 setInputYear ∷ Text → InputTrack → InputTrack
-setInputYear α ω = ω { inputYear = convert α }
-  where convert β = (const 0 ||| fst) $ decimal β
+setInputYear α ω = ω { inputYear = readInt' 0 α }
 
 setInputDiscNumber ∷ Text → InputTrack → InputTrack
-setInputDiscNumber α ω = ω { inputDiscNumber = convert α }
-  where convert β = (const 0 ||| fst) $ decimal β
+setInputDiscNumber α ω = ω { inputDiscNumber = readInt' 0 α }
 
 setInputTrackNumber ∷ Text → InputTrack → InputTrack
-setInputTrackNumber α ω = ω { inputTrackNumber = convert α }
-  where convert β = (const 0 ||| fst) $ decimal β
+setInputTrackNumber α ω = ω { inputTrackNumber = readInt' 0 α }
 
 setInputAlbumArtist ∷ Text → InputTrack → InputTrack
 setInputAlbumArtist α ω = ω { inputAlbumArtist = Just $ Heading α }

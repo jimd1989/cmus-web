@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 99599ef7a74d0128ace33c3275dffe4dbac42bcaf59c06eac4b06970778870ef
+-- hash: 4be81b809b50ecbebca5af6cf4c682680dcb966c83951c2d72b812d1a8ba5071
 
 name:           server
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       CmusRepository
+      Helpers
       Models
       Parse
       Transformers
@@ -35,7 +36,7 @@ library
       Paths_server
   hs-source-dirs:
       src
-  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
@@ -62,7 +63,7 @@ executable server-exe
       Paths_server
   hs-source-dirs:
       app
-  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -91,7 +92,7 @@ test-suite server-test
       Paths_server
   hs-source-dirs:
       test
-  default-extensions: DefaultSignatures DeriveAnyClass DeriveGeneric FlexibleContexts NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
+  default-extensions: DefaultSignatures DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving NamedFieldPuns NoImplicitPrelude OverloadedStrings RecordWildCards TupleSections UnicodeSyntax
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson

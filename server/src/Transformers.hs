@@ -1,21 +1,23 @@
-module Transformers (note, transformLibrary, transformQueue) where
+module Transformers (transformLibrary, transformQueue) where
 
 -- Converts parsed cmus output into complex data structures more suitable for
 -- frontend consumption.
 
-import Prelude (Eq, Monoid, (.), ($), (<$>), (==), id, pure)
+import Prelude (Eq, Monoid, (.), ($), (<$>), (==), id)
 import Control.Arrow ((&&&))
-import Control.Monad.Except (MonadError, throwError)
+import Control.Monad.Except (MonadError)
 import Data.Function (on)
 import Data.HashMap.Strict (insert, lookup)
 import Data.Int (Int)
 import Data.List (foldr, groupBy, map, sort, zip)
-import Data.Maybe (Maybe, catMaybes, maybe)
+import Data.Maybe (Maybe, catMaybes)
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (swap, uncurry)
 import Data.Vector (empty, fromList)
-import Network.HTTP.Types.Status (Status, status500)
-import Models
+import Network.HTTP.Types.Status (Status)
+import Models (Artist, Cmus(..), Heading, InputTrack(..), QueuedTrack, album, 
+  anyArtist, artist, cmus, fromInputTrack, setInputFilename, setInputNum)
+import Helpers (note)
 
 -- Helpers
 transformLibraryEntry ∷ Int → InputTrack → Cmus → Cmus
@@ -57,9 +59,6 @@ find ∷ (MonadError Status m) ⇒ Cmus → InputTrack → m QueuedTrack
 find α ω = note $ lookup (inputFilename ω) (dict α)
 
 -- Exposed functions
-note ∷ (MonadError Status m) ⇒ Maybe a → m a
-note = maybe (throwError status500) pure
-
 transformLibrary ∷ [InputTrack] → Cmus
 transformLibrary α = transformFiles $ transformTree flatLibrary
   where flatLibrary = foldr (uncurry transformLibraryEntry) cmus (zip [0 .. ] α)
