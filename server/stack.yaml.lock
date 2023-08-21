@@ -3,18 +3,11 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: posix-escape-0.1@sha256:adbb650397cd8685ea220b40739ee80d4e8329643a98aa2993a6f13a598bd18c,1160
-    pantry-tree:
-      size: 386
-      sha256: e9824c495e3e2a3a1f737b5d2fcdd0ea1ce6b2919cec252c1ef7ca3b19dedf57
-  original:
-    hackage: posix-escape-0.1@sha256:adbb650397cd8685ea220b40739ee80d4e8329643a98aa2993a6f13a598bd18c,1160
+packages: []
 snapshots:
 - completed:
-    size: 585392
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/1.yaml
-    sha256: 4e4c5e435a2f1c6f3c650f282db0f387f806406ed4fe6ef1aa4e6add9035d065
+    sha256: 0be74c2dd964ab0e8887c1ece93b7c02e1cc2af11f5e3cc334300a5871e73917
+    size: 640028
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/8.yaml
   original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/1.yaml
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/8.yaml

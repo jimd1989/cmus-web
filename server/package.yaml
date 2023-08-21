@@ -26,7 +26,6 @@ dependencies:
 - bytestring
 - http-types
 - mtl
-- posix-escape
 - process
 - stm
 - text

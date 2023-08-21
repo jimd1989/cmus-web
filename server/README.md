@@ -6,14 +6,14 @@ Build it with `stack build` and move/name the binary to where you please. Probab
 
 Run it with `server n`, where `n` is your desired port number.
 
-It exposes the following routes:
+It exposes the following routes. Everything is a GET method to avoid CORS nonsense. This is only intended for local use so who gives a fuck.
 
-| Route         | Method | Payload                                                                                                  |
-|---------------|--------|----------------------------------------------------------------------------------------------------------|
-|/              |GET     |Tree view of library and current queue. Empty until synced.                                               |
-|/sync          |GET     |Tree view of library and current queue. Run at startup and every time new files are added to cmus library.|
-|/queue         |GET     |Current queue.                                                                                            |
-|/play          |PUT     |Toggles play/pause state of cmus. Always returns 200.                                                     |
-|/add/{n}-{m}...|POST    |Adds track numbers [n, m, ...] to queue. Empty response for performance reasons.                          |
-|/remove/{n}    |DELETE  |Removes track {n} from queue. Returns current queue, which is less than ideal, but ensures sync.          |
+| Route         | Payload                                                                                                  |
+|---------------|----------------------------------------------------------------------------------------------------------|
+|/              |Tree view of library and current queue. Empty until synced.                                               |
+|/sync          |Tree view of library and current queue. Run at startup and every time new files are added to cmus library.|
+|/queue         |Current queue.                                                                                            |
+|/play          |Toggles play/pause state of cmus. Always returns 200.                                                     |
+|/add/{n}-{m}...|Adds track numbers [n, m, ...] to queue. Empty response for performance reasons.                          |
+|/remove/{n}    |Removes track {n} from queue. Returns current queue, which is less than ideal, but ensures sync.          |
 

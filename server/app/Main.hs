@@ -36,11 +36,11 @@ gzipSettings = def { gzipFiles = GzipCompress }
 
 route ∷ Request → TVar Cmus → IO Response
 route α ω = case (pathInfo α, requestMethod α) of
-  ("add"    : ns : [], "POST"  ) → addTrack ω ns
-  ("remove" : n  : [], "DELETE") → removeTrack ω n
+  ("add"    : ns : [], "GET"   ) → addTrack ω ns
+  ("remove" : n  : [], "GET"   ) → removeTrack ω n
   ("sync"   :      [], "GET"   ) → fullSync ω
   ("queue"  :      [], "GET"   ) → queue ω
-  ("play"   :      [], "PUT"   ) → play $> textResponse status200 "Toggled."
+  ("play"   :      [], "GET"   ) → play $> textResponse status200 "Toggled."
   ([]                , "GET"   ) → jsonResponse status200 <$> readTVarIO ω
   (_                 , _       ) → pure $ textResponse status404 "Invalid path."
 
