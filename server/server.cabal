@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 49a28eaf3b52a7539a278d7e7db15c1ed17610aeec5682a74408e407d6813648
+-- hash: b9cade4b3626ecac1e9d1667e0c3acc6b1dcf56e39dabf6fcd670f4f6fa94225
 
 name:           server
 version:        0.1.0.0
@@ -27,8 +27,10 @@ source-repository head
 
 library
   exposed-modules:
+      Arguments
       CmusRepository
       Helpers
+      LandingPage
       Models
       Parse
       Transformers
