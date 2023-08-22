@@ -10,7 +10,7 @@ It exposes the following routes. Everything is a GET method to avoid CORS nonsen
 
 | Route         | Payload                                                                                                  |
 |---------------|----------------------------------------------------------------------------------------------------------|
-|/              |Tree view of library and current queue. Empty until synced.                                               |
+|/              |Main app view. The only HTML response here.                                                               |
 |/sync          |Tree view of library and current queue. Run at startup and every time new files are added to cmus library.|
 |/queue         |Current queue.                                                                                            |
 |/play          |Toggles play/pause state of cmus. Always returns 200.                                                     |

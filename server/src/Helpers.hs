@@ -1,4 +1,4 @@
-module Helpers ((◀), (◁), head', note, readInt, readInt') where
+module Helpers ((◀), (◁), (◇), head', note, readInt, readInt') where
 
 import Prelude (Int, (.), fmap, pure)
 import Control.Arrow ((+++), (|||))
@@ -7,6 +7,7 @@ import Control.Monad.Except (MonadError, liftEither, throwError)
 import Data.Function (const)
 import Data.Functor (Functor)
 import Data.Maybe (Maybe, maybe)
+import Data.Semigroup (Semigroup, (<>))
 import Data.Text (Text)
 import Data.Text.Read (decimal)
 import Data.Tuple (fst)
@@ -34,3 +35,8 @@ infixr 9 ◁
 (◀) ∷ Monad m ⇒ (b → m c) → (a → m b) → a → m c
 f ◀ g = f <=< g
 infixr 1 ◀
+
+-- Digraph Dw
+(◇) ∷ Semigroup a ⇒ a → a → a
+α ◇ ω = α <> ω
+infixr 5 ◇
