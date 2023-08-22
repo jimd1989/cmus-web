@@ -12,7 +12,9 @@ to generate this file without the comments in this block.
 -}
 { name = "cmus-web"
 , dependencies =
-  [ "affjax-web"
+  [ "aff"
+  , "affjax"
+  , "affjax-web"
   , "console"
   , "effect"
   , "halogen"
