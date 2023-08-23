@@ -17,9 +17,14 @@ to generate this file without the comments in this block.
   , "affjax-web"
   , "console"
   , "effect"
+  , "either"
+  , "foldable-traversable"
   , "halogen"
+  , "integers"
   , "maybe"
   , "prelude"
+  , "profunctor"
+  , "tuples"
   , "web-html"
   ]
 , packages = ./packages.dhall

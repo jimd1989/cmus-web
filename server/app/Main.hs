@@ -15,7 +15,7 @@ import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Gzip (GzipSettings(..), GzipFiles(..), def, gzip)
-import CmusRepository (add, getQueue, play, remove, sync)
+import CmusRepository (add, getQueue, play, remove, sync, volume)
 import Arguments (Arguments(..), arguments)
 import LandingPage (landingPage)
 import Models (Cmus, cmus)
@@ -37,6 +37,7 @@ route α ω β = case (pathInfo α, requestMethod α) of
   ("queue"  :      [], "GET") → queue ω
   ("app.js" :      [], "GET") → pure $ jsResponse status200 $ js β
   ("play"   :      [], "GET") → play $> textResponse status200 "Toggled."
+  ("vol"    : n  : [], "GET") → setVolume n
   ([]                , "GET") → pure $ htmlResponse status200 $ landingPage
   (_                 , _    ) → pure $ textResponse status404 "Invalid path."
 
@@ -48,6 +49,9 @@ removeTrack α n = handle "Error removing tracks." $ remove α n
 
 fullSync ∷ TVar Cmus → IO Response
 fullSync α = handle "Error syncing library." $ sync α
+
+setVolume ∷ Text → IO Response
+setVolume n = handle "Error setting volume." $ volume n
 
 queue ∷ TVar Cmus → IO Response
 queue α = handle "Error getting queue." $ getQueue α

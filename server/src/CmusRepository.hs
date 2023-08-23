@@ -1,21 +1,22 @@
-module CmusRepository (add, getQueue, play, remove, sync) where
+module CmusRepository (add, getQueue, play, remove, sync, volume) where
 
 -- The bridge between the server routes and cmus. Parses user input and cmus
 -- output to manage player state.
 
-import Prelude (Int, String, (.), ($), (-), (*>), (<$>), (>>=), pure)
+import Prelude (Int, String, (.), ($), (-), (*>), (<$>), (>>=), (=<<), pure)
 import Control.Monad.Except (MonadError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable (traverse_)
 import Data.Function (const)
 import Data.Functor (($>))
+import Data.List (drop)
 import Data.Text (Text, pack, splitOn, unpack)
 import Data.Traversable (traverse)
 import Data.Vector ((!?))
 import GHC.Conc (TVar, atomically, readTVarIO, writeTVar)
 import Network.HTTP.Types.Status (Status)
 import System.Process (readProcess)
-import Helpers (note, readInt)
+import Helpers ((◁), (◀), head', note, readInt)
 import Models (Cmus(..), InputTrack, QueuedTrack)
 import Parse (parseCmus)
 import Transformers (transformLibrary, transformQueue)
@@ -41,6 +42,16 @@ addQueue α = readCmus ["-q", unpack α] $> ()
 
 readLibrary ∷ (MonadError Status m, MonadIO m) ⇒ m [InputTrack]
 readLibrary = readCmus ["-C", "save -l -e -"] >>= parseCmus
+
+readVolume ∷ (MonadError Status m, MonadIO m) ⇒ m Int
+readVolume = (parse ◀ split ◁ grep) =<< query
+  where query = liftIO $ readProcess "cmus-remote" ["-Q"] ""
+        grep  = liftIO . readProcess "grep" ["vol_left"]
+        split = drop 2 . splitOn " " . pack
+        parse = readInt ◀ (head' . splitOn "\n") ◀ head'
+
+writeVolume ∷ MonadIO m ⇒ Text → m ()
+writeVolume n = liftIO $ readCmus ["-v", unpack n] $> ()
 
 viewQueue ∷ MonadIO m ⇒ m ()
 viewQueue = readCmus ["-C", "view 4"] *> readCmus ["-C", "win-top"] $> ()
@@ -95,3 +106,6 @@ remove α n = do
 
 play ∷ MonadIO m ⇒ m ()
 play = playPause
+
+volume ∷ (MonadError Status m, MonadIO m) ⇒ Text → m Int
+volume n = writeVolume n *> readVolume
