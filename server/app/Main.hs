@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (IO, (.), ($), (>>=), (<$>), flip, pure)
+import Prelude (Int, IO, (.), ($), (>>=), (<$>), const, flip, id, pure)
 import Control.Arrow ((|||))
 import Control.Concurrent.STM (newTVarIO)
 import Control.Concurrent.STM.TVar (TVar)
@@ -8,38 +8,43 @@ import Control.Monad.Except (ExceptT, runExceptT)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Lazy.Char8 (fromChunks)
 import Data.Functor (($>))
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Types (Status, status200, status404)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Gzip (GzipSettings(..), GzipFiles(..), def, gzip)
+import System.Environment (getArgs)
 import CmusRepository (add, getQueue, play, remove, sync, volume)
-import Arguments (Arguments(..), arguments)
-import LandingPage (landingPage)
 import Models (Cmus, cmus)
+import Resources (Resources(..), resources)
+import Helpers ((◀), (◁), head', readInt)
 
 main ∷ IO ()
 main = do
-  args ← arguments
-  env  ← newTVarIO $ cmus
-  run (port args) $ gzip gzipSettings $ \req send → route req env args >>= send
+  port ← getPortNumber
+  res  ← resources
+  cms  ← newTVarIO $ cmus
+  run port $ gzip gzipSettings $ \req send → route req cms res >>= send
 
 gzipSettings ∷ GzipSettings
 gzipSettings = def { gzipFiles = GzipCompress }
 
-route ∷ Request → TVar Cmus → Arguments → IO Response
-route α ω β = case (pathInfo α, requestMethod α) of
-  ("add"    : ns : [], "GET") → addTrack ω ns
-  ("remove" : n  : [], "GET") → removeTrack ω n
-  ("sync"   :      [], "GET") → fullSync ω
-  ("queue"  :      [], "GET") → queue ω
-  ("app.js" :      [], "GET") → pure $ jsResponse status200 $ js β
-  ("play"   :      [], "GET") → play $> textResponse status200 "Toggled."
-  ("vol"    : n  : [], "GET") → setVolume n
-  ([]                , "GET") → pure $ htmlResponse status200 $ landingPage
-  (_                 , _    ) → pure $ textResponse status404 "Invalid path."
+getPortNumber ∷ IO Int
+getPortNumber = (const 1917 ||| id) . (readInt ◀ pack ◁ head') <$> getArgs
+
+route ∷ Request → TVar Cmus → Resources → IO Response
+route α ω r = case (pathInfo α, requestMethod α) of
+  ("add"      : ns : [], "GET") → addTrack ω ns
+  ("remove"   : n  : [], "GET") → removeTrack ω n
+  ("sync"     :      [], "GET") → fullSync ω
+  ("queue"    :      [], "GET") → queue ω
+  ("index.js" :      [], "GET") → pure $ jsResponse status200 $ js r
+  ("play"     :      [], "GET") → play $> textResponse status200 "Toggled."
+  ("vol"      : n  : [], "GET") → setVolume n
+  ([]                  , "GET") → pure $ htmlResponse status200 $ html r
+  (_                   , _    ) → pure $ textResponse status404 "Invalid path."
 
 addTrack ∷ TVar Cmus → Text → IO Response
 addTrack α n = handle "Error adding tracks." $ add α n

@@ -27,6 +27,6 @@ to generate this file without the comments in this block.
   , "tuples"
   , "web-html"
   ]
-, packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "test/**/*.purs" ]
+, packages = ./frontend/packages.dhall
+, sources = [ "./frontend/src/**/*.purs", "./frontend/test/**/*.purs" ]
 }

@@ -42,7 +42,7 @@ c = H.mkComponent { initialState, render, eval }
       HH.button [HE.onClick (const $ Vol url (bounds $ vol - 5))] [HH.text "-"],
       HH.button [HE.onClick (const $ Play url)] [HH.text "▶"],
       HH.button [HE.onClick (const $ Vol url (bounds $ vol + 5))] [HH.text "+"],
-      HH.text (show vol ◇ "%")
+      HH.span [HP.id "vol"] [HH.text (show vol ◇ "%")]
     ]
     handleAction α = case α of
       (Play ω  ) → H.liftAff $ pausePlay ω
