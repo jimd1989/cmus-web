@@ -9,6 +9,7 @@ install:
 	mv ./cmus-web-server /usr/local/bin
 	mv ./index.js /etc/cmus-web
 	cp ./resources/index.html /etc/cmus-web
+	cp ./resources/style.css /etc/cmus-web
 uninstall:
 	rm /usr/local/bin/cmus-web-server
 	rm -rf /etc/cmus-web

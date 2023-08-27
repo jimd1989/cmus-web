@@ -38,10 +38,11 @@ route ∷ Request → TVar Cmus → Resources → IO Response
 route α ω r = case (pathInfo α, requestMethod α) of
   ("add"      : ns : [], "GET") → addTrack ω ns
   ("remove"   : n  : [], "GET") → removeTrack ω n
-  ("sync"     :      [], "GET") → fullSync ω
-  ("queue"    :      [], "GET") → queue ω
-  ("index.js" :      [], "GET") → pure $ jsResponse status200 $ js r
-  ("play"     :      [], "GET") → play $> textResponse status200 "Toggled."
+  ("sync"          : [], "GET") → fullSync ω
+  ("queue"         : [], "GET") → queue ω
+  ("style.css"     : [], "GET") → pure $ cssResponse status200 $ css r
+  ("index.js"      : [], "GET") → pure $ jsResponse status200 $ js r
+  ("play"          : [], "GET") → play $> textResponse status200 "Toggled."
   ("vol"      : n  : [], "GET") → setVolume n
   ([]                  , "GET") → pure $ htmlResponse status200 $ html r
   (_                   , _    ) → pure $ textResponse status404 "Invalid path."
@@ -64,6 +65,11 @@ queue α = handle "Error getting queue." $ getQueue α
 handle ∷ ToJSON a ⇒ Text → ExceptT Status IO a → IO Response
 handle α ω = respond <$> (runExceptT ω)
   where respond = flip textResponse α ||| jsonResponse status200
+
+cssResponse ∷ Status → Text → Response
+cssResponse α ω = responseLBS α headers (convert ω)
+  where headers = [(hContentType, "text/css")]
+        convert = fromChunks . pure . encodeUtf8
 
 jsResponse ∷ Status → Text → Response
 jsResponse α ω = responseLBS α headers (convert ω)
