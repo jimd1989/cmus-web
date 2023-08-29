@@ -46,22 +46,24 @@ c = H.mkComponent { initialState, render, eval }
     }
     initialState = const {url: "", vol: 0, screen: Library}
     render { url, vol, screen } = HH.div [HP.id "app"] [
-      HH.div [HP.id "screens"] [renderScreen screen],
-      HH.div [HP.id "menu"] [
+      HH.div [HP.id "top-menu"] [
         HH.button [HE.onClick (const $ Switch Library),
                    HP.classes [activeButton Library screen]] 
                   [HH.text "⌂"],
         HH.button [HE.onClick (const $ Switch Queue),
                    HP.classes [activeButton Queue screen]] 
-                  [HH.text "≡"],
+                  [HH.text "≡"]
+      ],
+      HH.div [HP.id "screens"] [renderScreen screen],
+      HH.div [HP.id "menu"] [
         HH.button [HE.onClick (const $ Vol url (bounds $ vol - 5))] 
                   [HH.text "-"],
         HH.button [HE.onClick (const $ Play url)]
                   [HH.text "▶"],
         HH.button [HE.onClick (const $ Vol url (bounds $ vol + 5))] 
                   [HH.text "+"],
-        HH.span [HP.id "vol"] 
-                [HH.text (show vol ◇ "%")]
+        HH.div [HP.id "vol"] 
+               [HH.text (show vol ◇ "%")]
       ]
     ]
     renderScreen Library = HH.slot_ _library 0 library unit
