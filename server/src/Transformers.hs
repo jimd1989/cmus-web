@@ -1,69 +1,33 @@
-module Transformers (transformLibrary, transformQueue) where
+module Transformers (makeLibrary, setQueue) where
 
--- Converts parsed cmus output into complex data structures more suitable for
--- frontend consumption.
-
-import Prelude (Eq, Monoid, (.), ($), (<$>), (==), id)
+import Prelude (Int, (.), flip, traverse)
 import Control.Arrow ((&&&))
-import Control.Monad.Except (MonadError)
-import Data.Function (on)
-import Data.HashMap.Strict (insert, lookup)
-import Data.Int (Int)
-import Data.List (foldr, groupBy, map, sort, zip)
-import Data.Maybe (Maybe, catMaybes)
-import Data.Traversable (sequence, traverse)
-import Data.Tuple (swap, uncurry)
-import Data.Vector (empty, fromList)
+import Control.Monad.Except (MonadError) 
+import qualified Data.HashMap.Strict as H
+import qualified Data.List as L
+import Data.Text (Text)
+import Data.Tuple (uncurry)
+import qualified Data.Vector as V
 import Network.HTTP.Types.Status (Status)
-import Models (Artist, Cmus(..), Heading, InputTrack(..), QueuedTrack, album, 
-  anyArtist, artist, cmus, fromInputTrack, setInputFilename, setInputNum)
-import Helpers (note)
+import Helpers ((◀), (◁), note)
+import Models (Cmus(..), Track(..))
 
--- Helpers
-transformLibraryEntry ∷ Int → InputTrack → Cmus → Cmus
-transformLibraryEntry n α (Cmus _ _ dict _ tmpFiles tmpTracks) = Cmus {
-  files = empty,
-  tree = [],
-  dict = insert (inputFilename α) (fromInputTrack numberedTrack) dict,
-  queue = [],
-  tmpTracks = numberedTrack : tmpTracks,
-  tmpFiles = (inputFilename α) : tmpFiles
-}
-  where numberedTrack = setInputFilename "" $ setInputNum n α
+-- Concered with refining raw Track records into more more advanced Cmus record
+-- state, which is returned to the frontend.
 
-groupByField ∷ (Eq a, Monoid a) ⇒ (b → Maybe a) → [b] → [(a, [b])]
-groupByField field = map format . group
-  where group  = groupBy (on (==) field)
-        format = traverse swap . catMaybes . map (sequence . (id &&& field))
+numberTracks ∷ [Track] → [Track]
+numberTracks = L.zipWith (\n ω → ω { key = n }) [0 ..]
 
-groupByArtist ∷ [InputTrack] → [(Heading, [InputTrack])]
-groupByArtist α = groupByField anyArtist α
+filesToIndices ∷ [Track] → H.HashMap Text Int
+filesToIndices = H.fromList . L.map (filename &&& key)
 
-transformArtist ∷ (Heading, [InputTrack]) → Artist
-transformArtist (α, ω) =
-  artist (α, map album $ groupByField inputAlbum ω)
+makeLibrary ∷ [Track] → Cmus
+makeLibrary = uncurry (Cmus V.empty) . filesAndLibrary
+  where filesAndLibrary = (filesToIndices &&& V.fromList) . numberTracks
 
-transformTree ∷ Cmus → Cmus
-transformTree α = α { 
-  tree = map transformArtist $ groupByArtist (sort $ tmpTracks α),
-  tmpTracks = []
-}
-
-transformFiles ∷ Cmus → Cmus
-transformFiles α = α {
-  files = fromList $ tmpFiles α,
-  tmpFiles = []
-}
-                    
-find ∷ (MonadError Status m) ⇒ Cmus → InputTrack → m QueuedTrack
-find α ω = note $ lookup (inputFilename ω) (dict α)
-
--- Exposed functions
-transformLibrary ∷ [InputTrack] → Cmus
-transformLibrary α = transformFiles $ transformTree flatLibrary
-  where flatLibrary = foldr (uncurry transformLibraryEntry) cmus (zip [0 .. ] α)
-
-transformQueue ∷ (MonadError Status m) ⇒ Cmus → [InputTrack] → m Cmus
-transformQueue α ω = replaceQueue α <$> newQueue
-  where newQueue = traverse (find α) ω
-        replaceQueue β γ = β { queue = γ }
+setQueue ∷ MonadError Status m ⇒ Cmus → [Track] → m Cmus
+setQueue α = newQueue ◁ V.fromList ◁ traverse libLook ◀ traverse filesLook
+  where filesLook  = note . (flip H.lookup (files α)) . filename
+        libLook    = note . ((library α) V.!?)
+        newQueue ω = α { queue = ω }
+        

@@ -6,6 +6,7 @@ import Control.Concurrent.STM (newTVarIO)
 import Control.Concurrent.STM.TVar (TVar)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Data.Aeson (ToJSON, encode)
+import Data.ByteString (ByteString)
 import Data.ByteString.Lazy.Char8 (fromChunks)
 import Data.Functor (($>))
 import Data.Text (Text, pack)
@@ -66,26 +67,23 @@ handle ∷ ToJSON a ⇒ Text → ExceptT Status IO a → IO Response
 handle α ω = respond <$> (runExceptT ω)
   where respond = flip textResponse α ||| jsonResponse status200
 
-cssResponse ∷ Status → Text → Response
-cssResponse α ω = responseLBS α headers (convert ω)
-  where headers = [(hContentType, "text/css")]
+response ∷ ByteString → Status → Text → Response
+response h α ω = responseLBS α headers (convert ω)
+  where headers = [(hContentType, h)]
         convert = fromChunks . pure . encodeUtf8
 
-jsResponse ∷ Status → Text → Response
-jsResponse α ω = responseLBS α headers (convert ω)
-  where headers = [(hContentType, "text/javascript")]
-        convert = fromChunks . pure . encodeUtf8
+cssResponse ∷ Status → Text → Response
+cssResponse = response "text/css"
 
 htmlResponse ∷ Status → Text → Response
-htmlResponse α ω = responseLBS α headers (convert ω)
-  where headers = [(hContentType, "text/html")]
-        convert = fromChunks . pure . encodeUtf8
+htmlResponse = response "text/html"
 
-textResponse ∷ Status → Text → Response
-textResponse α ω = responseLBS α headers (convert ω)
-  where headers = [(hContentType, "text/plain")]
-        convert = fromChunks . pure . encodeUtf8
+jsResponse ∷ Status → Text → Response
+jsResponse = response "text/javascript"
 
 jsonResponse ∷ ToJSON a ⇒ Status → a → Response
 jsonResponse α ω = responseLBS α headers (encode ω)
   where headers = [(hContentType, "application/json")]
+
+textResponse ∷ Status → Text → Response
+textResponse = response "text/plain"

@@ -15,6 +15,6 @@ It exposes the following routes. Everything is a GET method to avoid CORS nonsen
 |/queue         |Current queue.                                                                                            |
 |/play          |Toggles play/pause state of cmus. Always returns 200.                                                     |
 |/vol/{n}       |Sets playback volume to n ∈ [0, 100]. Requires `set softvol=true` in cmus. Returns new volume for sync.   |
-|/add/{n}-{m}...|Adds track numbers [n, m, ...] to queue. Empty response for performance reasons.                          |
-|/remove/{n}    |Removes track {n} from queue. Returns current queue, which is less than ideal, but ensures sync.          |
+|/add/{n}-{m}...|Adds track numbers [n, m, ...] to queue. Returns queue for sync.                                          |
+|/remove/{n}    |Removes track {n} from queue. Returns queue for sync.                                                     |
 
