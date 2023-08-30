@@ -24,6 +24,8 @@ to generate this file without the comments in this block.
   , "maybe"
   , "prelude"
   , "profunctor"
+  , "simple-json"
+  , "transformers"
   , "tuples"
   , "web-html"
   ]

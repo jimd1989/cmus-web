@@ -23,6 +23,7 @@ import Type.Proxy (Proxy(..))
 import Web.HTML (window)
 import Web.HTML.Window (location)
 import Web.HTML.Location (href)
+import Components.App (app)
 import Helpers ((◇), (⊙), (∘), (◁), (◀))
 
 type URL = String
@@ -119,4 +120,4 @@ bounds n           = n
 main ∷ Effect Unit
 main = HA.runHalogenAff do
   body ← HA.awaitBody
-  runUI c unit body
+  runUI app unit body
