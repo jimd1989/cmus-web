@@ -1,4 +1,4 @@
-module Network where
+module Network (getCmus, getPausePlay, getVol, getQueue, handleNet) where
 
 import Prelude (($), (>>=), bind, show, pure)
 import Affjax.ResponseFormat (string)
@@ -41,8 +41,8 @@ getCmus = getObj parseCmus "sync"
 getQueue ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ m (Array Track)
 getQueue = getObj parseTracks "queue"
 
-getVolume ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ Int → m Int
-getVolume n = parseInt ⊙ getString path
+getVol ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ Int → m Int
+getVol n = parseInt ⊙ getString path
   where path     = "vol/" ◇ (show n)
         parseInt = fromMaybe 0 ∘ fromString
 
