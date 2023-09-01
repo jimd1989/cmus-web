@@ -3,12 +3,14 @@ module CmusRepository (add, getQueue, play, remove, sync, volume) where
 -- The bridge between the server routes and cmus. Parses user input and cmus
 -- output to manage player state.
 --
-import Prelude (Int, String, (.), ($), (-), (*>), (<$>), (>>=), (=<<), pure)
+import Prelude (String, (.), ($), (-), (*>), (<$>), (>>=), (=<<), (==), pure)
 import Control.Monad.Except (MonadError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable (traverse_)
+import Data.Bool (Bool(..))
 import Data.Function (const)
 import Data.Functor (($>))
+import Data.Int (Int)
 import Data.List (drop)
 import Data.Text (Text, pack, splitOn, unpack)
 import Data.Traversable (traverse)
@@ -36,6 +38,14 @@ readCmus α = liftIO $ pack <$> readProcess "cmus-remote" α ""
 
 readQueue ∷ (MonadError Status m, MonadIO m) ⇒ m [Track]
 readQueue = readCmus ["-C", "save -q -e -"] >>= parseTracks
+
+queueLength ∷ (MonadError Status m, MonadIO m) ⇒ m Int
+queueLength = (readInt ◀ pack ◁ bc ◀ wc ◀ grep ◀ cut) =<< query 
+  where query = liftIO $ readProcess "cmus-remote" ["-C", "save -q -e -"] ""
+        cut   = liftIO . readProcess "cut" ["-d", " ", "-f", "1"]
+        grep  = liftIO . readProcess "grep" ["file"]
+        wc    = liftIO . readProcess "wc" ["-l"]
+        bc    = liftIO . readProcess "bc" []
 
 addQueue ∷ MonadIO m ⇒ Text → m ()
 addQueue α = readCmus ["-q", unpack α] $> ()
@@ -97,14 +107,16 @@ add α ns = do
   writeVar  α newCmus
   pure      $ queue newCmus
 
-remove ∷ (MonadError Status m, MonadIO m) ⇒ TVar Cmus → Text → m (Vector Track)
-remove α n = do
-  num ← readInt n
-  viewQueue
-  doNTimes moveDown num
-  deleteTrack
-  getQueue α
-
+remove ∷ (MonadError Status m, MonadIO m) ⇒ 
+         TVar Cmus → Text → Text → m (Vector Track)
+remove α n m = do
+  appQueueLen ← readInt n
+  num         ← readInt m
+  currentLen  ← queueLength
+  case (currentLen == appQueueLen) of
+    False → getQueue α
+    True  → viewQueue *> doNTimes moveDown num *> deleteTrack *> getQueue α
+  
 play ∷ MonadIO m ⇒ m ()
 play = playPause
 

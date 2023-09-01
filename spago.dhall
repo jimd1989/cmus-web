@@ -15,6 +15,7 @@ to generate this file without the comments in this block.
   [ "aff"
   , "affjax"
   , "affjax-web"
+  , "arrays"
   , "console"
   , "effect"
   , "either"
@@ -24,6 +25,9 @@ to generate this file without the comments in this block.
   , "maybe"
   , "prelude"
   , "profunctor"
+  , "simple-json"
+  , "strings"
+  , "transformers"
   , "tuples"
   , "web-html"
   ]

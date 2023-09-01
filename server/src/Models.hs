@@ -21,7 +21,8 @@ cmus = Cmus V.empty H.empty V.empty
 data Track = Track {
   key ∷ Int,
   artist ∷ Maybe Text,
-  duration ∷ Maybe Text,
+  duration ∷ Maybe Text,  -- Raw parsed duration, in seconds
+  duration' ∷ Maybe Text, -- Refined duration, in mm:ss
   title ∷ Maybe Text,
   filename ∷ Text,
   album ∷ Maybe Text,
@@ -37,6 +38,7 @@ blankTrack = Track {
   key = 0,
   artist = Nothing,
   duration = Nothing,
+  duration' = Nothing,
   title = Nothing,
   filename = "",
   album = Nothing,
@@ -53,7 +55,7 @@ instance ToJSON Cmus where
 instance ToJSON Track where
   toJSON α = object [ "key"         .= key α,
                       "artist"      .= artist α, 
-                      "len"         .= duration α, 
+                      "len"         .= duration' α, 
                       "title"       .= title α, 
                       "album"       .= album α, 
                       "genre"       .= genre α, 

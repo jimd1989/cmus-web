@@ -1,9 +1,10 @@
-module Helpers ((◀), (◁), (◇), head', note, readInt, readInt') where
+module Helpers ((◀), (◁), (◇), (≠), head', note, readInt, readInt') where
 
-import Prelude (Int, (.), fmap, pure)
+import Prelude (Bool, Int, (.), fmap, pure)
 import Control.Arrow ((+++), (|||))
 import Control.Monad (Monad, (<=<))
 import Control.Monad.Except (MonadError, liftEither, throwError)
+import Data.Eq (Eq, (/=))
 import Data.Function (const)
 import Data.Functor (Functor)
 import Data.Maybe (Maybe, maybe)
@@ -40,3 +41,8 @@ infixr 1 ◀
 (◇) ∷ Semigroup a ⇒ a → a → a
 α ◇ ω = α <> ω
 infixr 5 ◇
+
+-- Digraph !=
+(≠) ∷ Eq a ⇒ a → a → Bool
+α ≠ ω = α /= ω
+infixl 4 ≠

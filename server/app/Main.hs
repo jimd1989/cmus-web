@@ -37,22 +37,22 @@ getPortNumber = (const 1917 ||| id) . (readInt ◀ pack ◁ head') <$> getArgs
 
 route ∷ Request → TVar Cmus → Resources → IO Response
 route α ω r = case (pathInfo α, requestMethod α) of
-  ("add"      : ns : [], "GET") → addTrack ω ns
-  ("remove"   : n  : [], "GET") → removeTrack ω n
-  ("sync"          : [], "GET") → fullSync ω
-  ("queue"         : [], "GET") → queue ω
-  ("style.css"     : [], "GET") → pure $ cssResponse status200 $ css r
-  ("index.js"      : [], "GET") → pure $ jsResponse status200 $ js r
-  ("play"          : [], "GET") → play $> textResponse status200 "Toggled."
-  ("vol"      : n  : [], "GET") → setVolume n
-  ([]                  , "GET") → pure $ htmlResponse status200 $ html r
-  (_                   , _    ) → pure $ textResponse status404 "Invalid path."
+  ("add"      : ns  : [], "GET") → addTrack ω ns
+  ("remove"   : n:m : [], "GET") → removeTrack ω n m
+  ("sync"           : [], "GET") → fullSync ω
+  ("queue"          : [], "GET") → queue ω
+  ("style.css"      : [], "GET") → pure $ cssResponse status200 $ css r
+  ("index.js"       : [], "GET") → pure $ jsResponse status200 $ js r
+  ("play"           : [], "GET") → play $> textResponse status200 "Toggled."
+  ("vol"      : n   : [], "GET") → setVolume n
+  ([]                   , "GET") → pure $ htmlResponse status200 $ html r
+  (_                    , _    ) → pure $ textResponse status404 "Invalid path."
 
 addTrack ∷ TVar Cmus → Text → IO Response
 addTrack α n = handle "Error adding tracks." $ add α n
 
-removeTrack ∷ TVar Cmus → Text → IO Response
-removeTrack α n = handle "Error removing tracks." $ remove α n
+removeTrack ∷ TVar Cmus → Text → Text → IO Response
+removeTrack α n m = handle "Error removing tracks." $ remove α n m
 
 fullSync ∷ TVar Cmus → IO Response
 fullSync α = handle "Error syncing library." $ sync α
