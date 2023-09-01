@@ -1,17 +1,14 @@
-module Network (getCmus, getPausePlay, getVol, getQueue, handleNet) where
+module Network (getCmus, getDel, getPlay, getVol, getQueue, handleNet) where
 
-import Prelude (($), (>>=), bind, show, pure)
+import Prelude (($), (>>=), bind, show)
 import Affjax.ResponseFormat (string)
 import Affjax.Web (Error, get, printError)
 import Control.Monad.Error.Class (class MonadError, liftEither)
 import Control.Monad.Except.Trans (ExceptT, runExceptT)
 import Data.Either (Either)
-import Data.Function (const)
-import Data.Functor (($>))
 import Data.Int (fromString)
 import Data.Maybe (fromMaybe)
 import Data.Profunctor.Choice ((+++), (|||))
-import Data.Unit (Unit, unit)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Web.HTML (window)
@@ -38,6 +35,9 @@ getObj parse path = getString path >>= parse
 getCmus ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ m Cmus
 getCmus = getObj parseCmus "sync"
 
+getDel ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ Int → Int → m (Array Track)
+getDel n m = getObj parseTracks ("remove/" ◇ (show n) ◇ "/" ◇ (show m))
+
 getQueue ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ m (Array Track)
 getQueue = getObj parseTracks "queue"
 
@@ -46,8 +46,8 @@ getVol n = parseInt ⊙ getString path
   where path     = "vol/" ◇ (show n)
         parseInt = fromMaybe 0 ∘ fromString
 
-getPausePlay ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ m String
-getPausePlay = getString "play"
+getPlay ∷ ∀ m. MonadError String m ⇒ MonadAff m ⇒ m String
+getPlay = getString "play"
 
 -- Provide two DOM-altering functions to handle error/success cases of a
 -- network request

@@ -8,8 +8,7 @@ import Simple.JSON (readJSON)
 import Helpers ((◇))
 
 type Cmus = {
- library ∷ Array Track,
- queue ∷ Array Track 
+ library ∷ Array Track
 }
 
 parseCmus ∷ ∀ m. MonadError String m ⇒ String → m Cmus

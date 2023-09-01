@@ -14,7 +14,7 @@ import Components.Library (library, _library)
 import Components.Queue (queue, _queue)
 import Helpers ((◇))
 import Models (Cmus)
-import Network (getCmus, getPausePlay, getVol, handleNet)
+import Network (getCmus, getPlay, getVol, handleNet)
 
 data Screen = Loading | Library | Queue
 derive instance eqScreen ∷ Eq Screen
@@ -30,7 +30,7 @@ type AppState = {
 
 emptyAppState ∷ AppState 
 emptyAppState = {
-  cmus: { library: [], queue: [] },
+  cmus: { library: [] },
   err: Nothing,
   vol: 0,
   screen: Loading
@@ -67,7 +67,7 @@ app = H.mkComponent { initialState, render, eval }
   ]
   renderScreen α ω = case α of
     Library → HH.slot_ _library 0 library (ω.library)
-    Queue   → HH.slot_ _queue 0 queue (ω.queue)
+    Queue   → HH.slot_ _queue 0 queue unit
     Loading → HH.div [HP.id "loading"] [HH.h2_ [HH.text "Connecting ..."]]
   activeButton α ω | α == ω = HH.ClassName "screen-active"
   activeButton _ _          = HH.ClassName "screen-inactive"
@@ -75,7 +75,7 @@ app = H.mkComponent { initialState, render, eval }
   catch ω = H.modify_ _ {err = Just ω}
   init ω = H.modify_ _ {cmus = ω, screen = Library}
   handleAction α = case α of
-    Play     → handleNet catch noop getPausePlay
+    Play     → handleNet catch noop getPlay
     Vol n    → handleNet catch (\ω → H.modify_ _ {vol = ω}) (getVol n)
     Switch ω → H.modify_ _ {screen = ω}
     Init     → handleNet catch init getCmus
