@@ -130,5 +130,5 @@ remove n m = do
 play ∷ MonadIO m ⇒ m ()
 play = playPause
 
-volume ∷ (MonadReader Config m, MonadError Status m, MonadIO m) ⇒ Text → m Int
+volume ∷ (MonadError Status m, MonadIO m) ⇒ Text → m Int
 volume n = writeVolume n *> readVolume
