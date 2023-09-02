@@ -1,21 +1,48 @@
 module Routes (routes) where
 
-import Prelude ((.), ($), pure)
+import Prelude ((.), ($), (<$>), flip, pure)
+import Control.Arrow ((|||))
+import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader.Class (MonadReader)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy.Char8 (fromChunks)
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Types (Status, status200, status404)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, responseLBS)
 import Models.Config (Config)
+import Repositories.Cmus (add, getQueue, remove, sync)
+import Repositories.Resources (staticCss, staticHtml, staticJs)
 
-routes ∷ (MonadIO m, MonadReader Config m) ⇒ Request → m Response
+routes ∷ (MonadReader Config m, MonadIO m) ⇒ Request → m Response
 routes α = case (pathInfo α) of
+  ("add"       : ns : []) → addTrack ns
+  ("queue"               : []) → queue
+  ("remove"    : n  : m : []) → removeTrack n m
+  ("sync"               : []) → fullSync
+  ("style.css"      : []) → cssResponse status200 <$> staticCss
+  ("index.js"       : []) → jsResponse status200 <$> staticJs
+  (                   []) → htmlResponse status200 <$> staticHtml
   (_                    ) → pure $ textResponse status404 "Invalid path."
+
+handle ∷ (MonadIO m, ToJSON a) ⇒ Text → ExceptT Status m a → m Response
+handle α ω = respond <$> (runExceptT ω)
+  where respond = flip textResponse α ||| jsonResponse status200
+
+addTrack ∷ (MonadReader Config m, MonadIO m) ⇒ Text → m Response
+addTrack n = handle "Error adding tracks" $ add n
+
+fullSync ∷ (MonadReader Config m, MonadIO m) ⇒ m Response
+fullSync = handle "Error syncing library." $ sync
+
+removeTrack ∷ (MonadReader Config m, MonadIO m) ⇒ Text → Text → m Response
+removeTrack n m = handle "Error removing tracks" $ remove n m
+
+queue ∷ (MonadReader Config m, MonadIO m) ⇒ m Response
+queue = handle "Error getting queue" $ getQueue
 
 response ∷ ByteString → Status → Text → Response
 response h α ω = responseLBS α headers (convert ω)
@@ -67,6 +94,3 @@ textResponse = response "text/plain"
 --queue ∷ MonadIO m ⇒ TVar Cmus → m Response
 --queue α = handle "Error getting queue." $ getQueue α
 --
---handle ∷ (MonadIO m, ToJSON a) ⇒ Text → ExceptT Status m a → m Response
---handle α ω = respond <$> (runExceptT ω)
---  where respond = flip textResponse α ||| jsonResponse status200

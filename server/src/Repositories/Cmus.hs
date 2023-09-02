@@ -1,4 +1,4 @@
-module CmusRepository (add, getQueue, play, remove, sync, volume) where
+module Repositories.Cmus (add, getQueue, play, remove, sync, volume) where
 
 -- The bridge between the server routes and cmus. Parses user input and cmus
 -- output to manage player state.
