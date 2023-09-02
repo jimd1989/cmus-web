@@ -1,4 +1,4 @@
-module CmusRepository (add, getQueue, play, remove, sync, volume) where
+module Repositories.Cmus (add, getQueue, play, remove, sync, volume) where
 
 -- The bridge between the server routes and cmus. Parses user input and cmus
 -- output to manage player state.
@@ -6,6 +6,7 @@ module CmusRepository (add, getQueue, play, remove, sync, volume) where
 import Prelude (String, (.), ($), (-), (*>), (<$>), (>>=), (=<<), (==), pure)
 import Control.Monad.Except (MonadError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Reader (MonadReader, ask)
 import Data.Foldable (traverse_)
 import Data.Bool (Bool(..))
 import Data.Function (const)
@@ -19,12 +20,17 @@ import GHC.Conc (TVar, atomically, readTVarIO, writeTVar)
 import Network.HTTP.Types.Status (Status)
 import System.Process (readProcess)
 import Helpers ((◁), (◀), head', note, readInt)
-import Models (Cmus(..), Track(..))
+import Models.Config (Config(..))
+import Models.Cmus (Cmus(..))
+import Models.Track (Track(..))
 import Parse (parseTracks)
 import Transformers (makeLibrary, setQueue)
 
 -- Helpers
-readVar ∷ MonadIO m ⇒ TVar a → m a
+cmusVar ∷ MonadReader Config m ⇒ m (TVar Cmus)
+cmusVar = cmus <$> ask
+
+readVar ∷ (MonadIO m) ⇒ TVar a → m a
 readVar = liftIO . readTVarIO
 
 writeVar ∷ MonadIO m ⇒ TVar a → a → m ()
@@ -83,39 +89,43 @@ updateQueue ∷ (MonadError Status m, MonadIO m) ⇒ Cmus → m Cmus
 updateQueue α = readQueue >>= setQueue α
 
 -- Exposed functions
-getQueue ∷ (MonadError Status m, MonadIO m) ⇒ TVar Cmus → m (Vector Track)
-getQueue α = do
-  cmus     ← readVar α
-  newCmus  ← updateQueue cmus
-  writeVar α newCmus
-  pure     $ queue newCmus
+getQueue ∷ (MonadReader Config m, MonadError Status m, MonadIO m) ⇒ 
+           m (Vector Track)
+getQueue = do
+  cmusPointer ← cmusVar
+  playerState ← readVar cmusPointer
+  newState    ← updateQueue playerState
+  writeVar cmusPointer newState
+  pure        $ queue newState
 
-sync ∷ (MonadError Status m, MonadIO m) ⇒ TVar Cmus → m Cmus
-sync α = do
-  library  ← makeLibrary <$> readLibrary
-  newCmus  ← updateQueue library
-  writeVar α newCmus
-  pure       newCmus
+sync ∷ (MonadReader Config m, MonadError Status m, MonadIO m) ⇒  m Cmus
+sync = do
+  syncedPlayer ← makeLibrary <$> readLibrary
+  cmusPointer  ← cmusVar
+  writeVar cmusPointer syncedPlayer
+  pure syncedPlayer
 
-add ∷ (MonadError Status m, MonadIO m) ⇒ TVar Cmus → Text → m (Vector Track)
-add α ns = do
-  nums      ← readInts ns
-  cmus      ← readVar α
-  filenames ← traverse (note . filename ◁ ((library cmus) !?)) nums
+add ∷ (MonadReader Config m, MonadError Status m, MonadIO m) ⇒
+      Text → m (Vector Track)
+add ns = do
+  nums        ← readInts ns
+  cmusPointer ← cmusVar
+  playerState ← readVar cmusPointer
+  filenames   ← traverse (note . filename ◁ ((library playerState) !?)) nums
   traverse_ addQueue filenames
-  newCmus   ← updateQueue cmus
-  writeVar  α newCmus
-  pure      $ queue newCmus
+  newState    ← updateQueue playerState
+  writeVar cmusPointer newState
+  pure        $ queue newState
 
-remove ∷ (MonadError Status m, MonadIO m) ⇒ 
-         TVar Cmus → Text → Text → m (Vector Track)
-remove α n m = do
+remove ∷ (MonadReader Config m, MonadError Status m, MonadIO m) ⇒ 
+         Text → Text → m (Vector Track)
+remove n m = do
   appQueueLen ← readInt n
   num         ← readInt m
   currentLen  ← queueLength
   case (currentLen == appQueueLen) of
-    False → getQueue α
-    True  → viewQueue *> doNTimes moveDown num *> deleteTrack *> getQueue α
+    False → getQueue
+    True  → viewQueue *> doNTimes moveDown num *> deleteTrack *> getQueue
   
 play ∷ MonadIO m ⇒ m ()
 play = playPause

@@ -15,7 +15,7 @@ import Data.Attoparsec.Combinator (lookAhead)
 import Data.Attoparsec.Text (Parser, endOfInput,
   isEndOfLine, many1, manyTill, parseOnly, space, string, take, takeTill)
 import Network.HTTP.Types.Status (Status, status500)
-import Models(Track(..), blankTrack)
+import Models.Track (Track(..), track')
 
 tag ∷ Parser ()
 tag = string "tag" *> space $> ()
@@ -30,7 +30,7 @@ file ∷ Parser (Track → Track)
 file = id3 (\α ω → ω { filename = α }) "file"
 
 -- Parse order-independent field-modifying lenses, to be selectively applied
--- to default `blankTrack` record. If a field doesn't exist on a track, a 
+-- to default `track'` record. If a field doesn't exist on a track, a 
 -- `skipField` lens is generated instead.
 field ∷ Parser (Track → Track)
 field =
@@ -49,10 +49,10 @@ delimiter = ((lookAhead $ string "file ") $> ()) <|> endOfInput
 
 -- "file" is always first field. Perform unconditional read for it first,
 -- then continue reading every line until the next "file" row is found. Fold
--- a `blankTrack` record across all the individual field lenses generated to
+-- a `track'` record across all the individual field lenses generated to
 -- populate the record with all available track info.
 fields ∷ Parser Track
-fields = foldr ($) blankTrack <$> liftA2 (:) file (manyTill field delimiter)
+fields = foldr ($) track' <$> liftA2 (:) file (manyTill field delimiter)
 
 tracks ∷ Parser [Track]
 tracks = many1 fields <* endOfInput

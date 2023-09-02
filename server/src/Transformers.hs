@@ -13,7 +13,8 @@ import qualified Data.Vector as V
 import Network.HTTP.Types.Status (Status)
 import Text.Read (readMaybe)
 import Helpers ((◀), (◁), (◇), note)
-import Models (Cmus(..), Track(..))
+import Models.Cmus (Cmus(..))
+import Models.Track (Track(..))
 
 -- Concered with refining raw Track records into more more advanced Cmus record
 -- state, which is returned to the frontend.

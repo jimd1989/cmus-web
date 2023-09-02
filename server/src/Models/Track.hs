@@ -1,22 +1,8 @@
-module Models(Cmus(..), Track(..), blankTrack, cmus) where
-
--- Models cmus state in server memory. Library is represented as a flat list
--- of Track records, keyed directly by array index.
+module Models.Track (Track(..), track') where
 
 import Prelude (Int, Maybe(..))
 import Data.Aeson (ToJSON(..), (.=), object)
-import qualified Data.HashMap.Strict as H
 import Data.Text (Text)
-import qualified Data.Vector as V
-
-data Cmus = Cmus {
-  queue ∷ V.Vector Track,     -- Tracks currently queued for listening
-  files ∷ H.HashMap Text Int, -- Filename → Track key mapping; for queue reading
-  library ∷ V.Vector Track    -- All Tracks available for listening
-}
-
-cmus ∷ Cmus
-cmus = Cmus V.empty H.empty V.empty
 
 data Track = Track {
   key ∷ Int,
@@ -33,8 +19,8 @@ data Track = Track {
   albumArtist ∷ Maybe Text
 }
 
-blankTrack ∷ Track 
-blankTrack = Track {
+track' ∷ Track 
+track' = Track {
   key = 0,
   artist = Nothing,
   duration = Nothing,
@@ -48,9 +34,6 @@ blankTrack = Track {
   trackNumber = Nothing,
   albumArtist = Nothing
 }
-
-instance ToJSON Cmus where
-  toJSON α = object [ "library" .= library α, "queue" .= queue α ]
 
 instance ToJSON Track where
   toJSON α = object [ "key"         .= key α,
