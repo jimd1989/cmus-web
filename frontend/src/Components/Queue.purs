@@ -1,6 +1,7 @@
 module Components.Queue (queue, _queue) where
 
 import Prelude (($), map)
+import Control.Monad.Reader.Class (class MonadAsk)
 import Data.Array ((..), length, zipWith)
 import Data.Function (const)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -14,6 +15,7 @@ import Type.Proxy (Proxy(..))
 import Helpers ((∘))
 import Models (Track)
 import Network (getDel, getQueue, handleNet)
+import Types (Config)
 
 _queue = Proxy ∷ Proxy "queue"
 
@@ -30,7 +32,7 @@ emptyQueueState = {
   tracks: []
 }
 
-queue ∷ ∀ q i o m. MonadAff m ⇒ H.Component q i o m
+queue ∷ ∀ q i o m. MonadAsk Config m ⇒ MonadAff m ⇒ H.Component q i o m
 queue = H.mkComponent { initialState, render, eval }
   where
     eval = H.mkEval H.defaultEval {

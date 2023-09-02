@@ -1,6 +1,7 @@
 module Components.App (app) where
 
 import Prelude (($), (+), (-), (>), (<), pure, show)
+import Control.Monad.Reader.Class (class MonadAsk)
 import Data.Eq (class Eq, (==))
 import Data.Function (const)
 import Data.Maybe (Maybe(..))
@@ -15,6 +16,7 @@ import Components.Queue (queue, _queue)
 import Helpers ((◇))
 import Models (Cmus)
 import Network (getCmus, getPlay, getVol, handleNet)
+import Types (Config)
 
 data Screen = Loading | Library | Queue
 derive instance eqScreen ∷ Eq Screen
@@ -36,7 +38,7 @@ emptyAppState = {
   screen: Loading
 }
 
-app ∷ ∀ q o i m. MonadAff m ⇒ H.Component q i o m
+app ∷ ∀ q o i m. MonadAsk Config m ⇒ MonadAff m ⇒ H.Component q i o m
 app = H.mkComponent { initialState, render, eval }
   where 
   eval = H.mkEval H.defaultEval {

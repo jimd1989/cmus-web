@@ -23,12 +23,14 @@ to generate this file without the comments in this block.
   , "halogen"
   , "integers"
   , "maybe"
+  , "newtype"
   , "prelude"
   , "profunctor"
   , "simple-json"
   , "strings"
   , "transformers"
   , "tuples"
+  , "type-equality"
   , "web-html"
   ]
 , packages = ./frontend/packages.dhall
