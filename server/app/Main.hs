@@ -1,89 +1,28 @@
 module Main (main) where
 
-import Prelude (Int, IO, (.), ($), (>>=), (<$>), const, flip, id, pure)
+import Prelude (Int, IO, (.), ($), (>>=), (<$>), const, id)
 import Control.Arrow ((|||))
-import Control.Concurrent.STM (newTVarIO)
-import Control.Concurrent.STM.TVar (TVar)
-import Control.Monad.Except (ExceptT, runExceptT)
-import Data.Aeson (ToJSON, encode)
-import Data.ByteString (ByteString)
-import Data.ByteString.Lazy.Char8 (fromChunks)
-import Data.Functor (($>))
-import Data.Text (Text, pack)
-import Data.Text.Encoding (encodeUtf8)
-import Network.HTTP.Types (Status, status200, status404)
-import Network.HTTP.Types.Header (hContentType)
-import Network.Wai (Request, Response, pathInfo, requestMethod, responseLBS)
+import Control.Monad.Reader (runReaderT)
+import Data.Text (pack)
+import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Gzip (GzipSettings(..), GzipFiles(..), def, gzip)
 import System.Environment (getArgs)
-import CmusRepository (add, getQueue, play, remove, sync, volume)
-import Models (Cmus, cmus)
-import Resources (Resources(..), resources)
 import Helpers ((◀), (◁), head', readInt)
+import Models.Config (Config, config')
+import Routes (routes)
 
 main ∷ IO ()
 main = do
-  port ← getPortNumber
-  res  ← resources
-  cms  ← newTVarIO $ cmus
-  run port $ gzip gzipSettings $ \req send → route req cms res >>= send
+  port ← portNumber
+  conf ← config'
+  run port $ gzip gzipSettings $ app conf
+
+app ∷ Config → Application
+app α req send = runReaderT (routes req) α >>= send
 
 gzipSettings ∷ GzipSettings
 gzipSettings = def { gzipFiles = GzipCompress }
 
-getPortNumber ∷ IO Int
-getPortNumber = (const 1917 ||| id) . (readInt ◀ pack ◁ head') <$> getArgs
-
-route ∷ Request → TVar Cmus → Resources → IO Response
-route α ω r = case (pathInfo α, requestMethod α) of
-  ("add"      : ns  : [], "GET") → addTrack ω ns
-  ("remove"   : n:m : [], "GET") → removeTrack ω n m
-  ("sync"           : [], "GET") → fullSync ω
-  ("queue"          : [], "GET") → queue ω
-  ("style.css"      : [], "GET") → pure $ cssResponse status200 $ css r
-  ("index.js"       : [], "GET") → pure $ jsResponse status200 $ js r
-  ("play"           : [], "GET") → play $> textResponse status200 "Toggled."
-  ("vol"      : n   : [], "GET") → setVolume n
-  ([]                   , "GET") → pure $ htmlResponse status200 $ html r
-  (_                    , _    ) → pure $ textResponse status404 "Invalid path."
-
-addTrack ∷ TVar Cmus → Text → IO Response
-addTrack α n = handle "Error adding tracks." $ add α n
-
-removeTrack ∷ TVar Cmus → Text → Text → IO Response
-removeTrack α n m = handle "Error removing tracks." $ remove α n m
-
-fullSync ∷ TVar Cmus → IO Response
-fullSync α = handle "Error syncing library." $ sync α
-
-setVolume ∷ Text → IO Response
-setVolume n = handle "Error setting volume." $ volume n
-
-queue ∷ TVar Cmus → IO Response
-queue α = handle "Error getting queue." $ getQueue α
-
-handle ∷ ToJSON a ⇒ Text → ExceptT Status IO a → IO Response
-handle α ω = respond <$> (runExceptT ω)
-  where respond = flip textResponse α ||| jsonResponse status200
-
-response ∷ ByteString → Status → Text → Response
-response h α ω = responseLBS α headers (convert ω)
-  where headers = [(hContentType, h)]
-        convert = fromChunks . pure . encodeUtf8
-
-cssResponse ∷ Status → Text → Response
-cssResponse = response "text/css"
-
-htmlResponse ∷ Status → Text → Response
-htmlResponse = response "text/html"
-
-jsResponse ∷ Status → Text → Response
-jsResponse = response "text/javascript"
-
-jsonResponse ∷ ToJSON a ⇒ Status → a → Response
-jsonResponse α ω = responseLBS α headers (encode ω)
-  where headers = [(hContentType, "application/json")]
-
-textResponse ∷ Status → Text → Response
-textResponse = response "text/plain"
+portNumber ∷ IO Int
+portNumber = (const 1917 ||| id) . (readInt ◀ pack ◁ head') <$> getArgs
