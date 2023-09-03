@@ -1,4 +1,4 @@
-module Models.LibView (LibHead, LibLeaf, LibNode, LibView(..), libView) where
+module Models.LibView (LibHead(..), LibLeaf(..), LibNode(..), LibView(..), libView) where
 
 import Prelude (($), (=<<), map)
 import Data.Array (groupBy, head)
@@ -23,11 +23,11 @@ libView ∷ NonEmpty List Tag → Array Track → LibView
 libView α ω = Head $ LibHead $ { children: libChildren α ω }
 
 libChildren ∷ NonEmpty List Tag → Array Track → Array LibView
-libChildren (tag :| α) ω = map (libView' α ∘ toArray) $ groupBy (on eq tag) ω
+libChildren (t :| α) ω = map (libView' (t :| α) ∘ toArray) $ groupBy (on eq t) ω
 
-libView' ∷ List Tag → Array Track → LibView
-libView'       Nil ω = Leaf $ LibLeaf { contents: ω }
-libView' (tag : α) ω = Node $ LibNode {
-  header: tag =<< head ω,
-  children: libChildren (tag :| α) ω
+libView' ∷ NonEmpty List Tag → Array Track → LibView
+libView' (_ :|   Nil) ω = Leaf $ LibLeaf { contents: ω }
+libView' (t :| α : β) ω = Node $ LibNode {
+  header: t =<< head ω,
+  children: libChildren (α :| β) ω
 }
