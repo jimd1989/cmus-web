@@ -25,6 +25,8 @@ libView α ω = Head $ LibHead $ { children: libChildren α ω }
 libChildren ∷ NonEmpty List Tag → Array Track → Array LibView
 libChildren (t :| α) ω = map (libView' (t :| α) ∘ toArray) $ groupBy (on eq t) ω
 
+-- Need better base case (with Nil possible)
+-- See hack in Components.Library for current workaround
 libView' ∷ NonEmpty List Tag → Array Track → LibView
 libView' (_ :|   Nil) ω = Leaf $ LibLeaf { contents: ω }
 libView' (t :| α : β) ω = Node $ LibNode {
