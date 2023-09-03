@@ -1,4 +1,4 @@
-module Repositories.Cmus (add, getQueue, play, remove, sync, volume) where
+module Repositories.Cmus (add, getQueue, play, remove, skip, sync, volume) where
 
 -- The bridge between the server routes and cmus. Parses user input and cmus
 -- output to manage player state.
@@ -129,6 +129,9 @@ remove n m = do
   
 play ∷ MonadIO m ⇒ m ()
 play = playPause
+
+skip ∷ MonadIO m ⇒ m ()
+skip = readCmus ["-q", "-n"] $> ()
 
 volume ∷ (MonadError Status m, MonadIO m) ⇒ Text → m Int
 volume n = writeVolume n *> readVolume

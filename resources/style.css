@@ -20,7 +20,7 @@ body {
 
 #screens {
     flex: 1;
-    font-size: 10pt;
+    font-size: 12pt;
     overflow: scroll;
 }
 

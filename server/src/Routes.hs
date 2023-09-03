@@ -15,13 +15,14 @@ import Network.HTTP.Types (Status, status200, status404)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, pathInfo, responseLBS)
 import Models.Config (Config)
-import Repositories.Cmus (add, getQueue, play, remove, sync, volume)
+import Repositories.Cmus (add, getQueue, play, remove, skip, sync, volume)
 import Repositories.Resources (staticCss, staticHtml, staticJs)
 
 routes ∷ (MonadReader Config m, MonadIO m) ⇒ Request → m Response
 routes α = case (pathInfo α) of
   ("add"       : ns     : []) → addTrack ns
   ("play"               : []) → togglePlay
+  ("skip"               : []) → toggleSkip
   ("queue"              : []) → queue
   ("remove"    : n  : m : []) → removeTrack n m
   ("sync"               : []) → fullSync
@@ -52,6 +53,9 @@ setVolume n = handle "Error setting volume" $ volume n
 
 togglePlay ∷ MonadIO m ⇒ m Response
 togglePlay = play $> textResponse status200 "Toggled"
+
+toggleSkip ∷ MonadIO m ⇒ m Response
+toggleSkip = skip $> textResponse status200 "Skipped"
 
 response ∷ ByteString → Status → Text → Response
 response h α ω = responseLBS α headers (convert ω)

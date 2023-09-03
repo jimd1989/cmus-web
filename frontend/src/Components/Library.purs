@@ -1,8 +1,7 @@
 module Components.Library (library, _library) where
 
-import Data.Function (const)
 import Data.List (List(..), (:))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Data.NonEmpty (NonEmpty, (:|))
 import Halogen as H
 import Halogen.HTML as HH
@@ -19,9 +18,8 @@ type LibraryState = {
   lib ∷ LibView
 }
 
--- HACK: penultimate item must be (const Nothing) for now
 order ∷ NonEmpty List (Track → Maybe String)
-order = (_.albumArtist) :| (_.album) : const Nothing : Nil
+order = (_.albumArtist) :| (_.album) : Nil
 
 library ∷ ∀ q o m. H.Component q (Array Track) o m
 library = H.mkComponent { initialState, render, eval }

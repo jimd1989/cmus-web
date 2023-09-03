@@ -1,4 +1,6 @@
-module Network (getCmus, getDel, getPlay, getVol, getQueue, handleNet) where
+module Network (
+  getCmus, getDel, getPlay, getSkip, getVol, getQueue, handleNet
+) where
 
 import Prelude (($), (>>=), bind, show)
 import Affjax.ResponseFormat (string)
@@ -50,6 +52,9 @@ getVol n = parseInt ⊙ getString path
 
 getPlay ∷ ∀ m. MonadAsk Config m ⇒ MonadError String m ⇒ MonadAff m ⇒ m String
 getPlay = getString "play"
+
+getSkip ∷ ∀ m. MonadAsk Config m ⇒ MonadError String m ⇒ MonadAff m ⇒ m String
+getSkip = getString "skip"
 
 -- Unwrap the Either from a network request and provide two component state
 -- altering functions to handle failure/success cases respectively.

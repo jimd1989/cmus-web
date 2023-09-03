@@ -1,11 +1,8 @@
 module Components.LibView (renderLibView) where
 
-import Prelude (($), map)
-import Data.Array (length)
-import Data.List (List(..), (:))
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.NonEmpty (NonEmpty, (:|))
-import Data.Tuple (Tuple(..))
+import Prelude (($), map, not)
+import Data.Function (const)
+import Data.Maybe (fromMaybe)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Halogen as H
@@ -15,7 +12,6 @@ import Halogen.HTML.Properties as HP
 import Type.Proxy (Proxy(..))
 import Helpers ((◇))
 import Models.LibView (LibHead(..), LibLeaf(..), LibNode(..), LibView(..))
-import Models.Track (Track)
 
 type LibSlot = ∀ q. H.Slot q Void Unit
 type Slots = (libHead ∷ LibSlot, libLeaf ∷ LibSlot, libNode ∷ LibSlot)
@@ -39,13 +35,20 @@ libLeaf = H.mkComponent { initialState, render, eval }
     initialState (LibLeaf { contents }) = { contents }
     render { contents } = HH.ol_ (map (\α → HH.li_ [HH.text $ fromMaybe "" α.title]) contents)
 
+data Action = Hide
+
 libNode ∷ ∀ q o m. H.Component q (LibNode) o m
 libNode = H.mkComponent { initialState, render, eval }
   where
-    eval = H.mkEval H.defaultEval
-    initialState (LibNode { children, header }) = { children, header }
-    render { children, header } = HH.li_ [HH.ul_ $ [HH.li_ [HH.text $ fromMaybe "" header]] ◇ (map renderLibView children)]
-    
+    eval = H.mkEval H.defaultEval {
+      handleAction = handleAction
+    }
+    initialState (LibNode { children, header }) = { children, header, hidden: true }
+    render { children, header, hidden } = case hidden of
+      true  → HH.div_   [HH.div [HE.onClick (const Hide)] [HH.text $ fromMaybe "" header]]
+      false → HH.div_ $ [HH.div [HE.onClick (const Hide)] [HH.text $ fromMaybe "" header]] ◇ (map renderLibView children)
+    handleAction Hide = H.modify_ \α → α { hidden = not α.hidden }
+
 renderLibView ∷ ∀ a m. LibView → H.ComponentHTML a Slots m
 renderLibView (Head α) = HH.slot_ _libHead unit libHead α
 renderLibView (Leaf α) = HH.slot_ _libLeaf unit libLeaf α

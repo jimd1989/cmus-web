@@ -15,13 +15,13 @@ import Components.Library (library, _library)
 import Components.Queue (queue, _queue)
 import Helpers ((◇))
 import Models.Cmus (Cmus)
-import Network (getCmus, getPlay, getVol, handleNet)
+import Network (getCmus, getPlay, getSkip, getVol, handleNet)
 import Types (Config)
 
 data Screen = Loading | Library | Queue
 derive instance eqScreen ∷ Eq Screen
 
-data Action = Init | Play | Vol Int | Switch Screen
+data Action = Init | Play | Skip | Vol Int | Switch Screen
 
 type AppState = {
   cmus ∷ Cmus,
@@ -59,10 +59,12 @@ app = H.mkComponent { initialState, render, eval }
     HH.div [HP.id "menu"] [
       HH.button [HE.onClick (const $ Vol (bounds $ vol - 5))] 
                 [HH.text "-"],
-      HH.button [HE.onClick (const $ Play)]
+      HH.button [HE.onClick (const Play)]
                 [HH.text "▶"],
       HH.button [HE.onClick (const $ Vol (bounds $ vol + 5))] 
                 [HH.text "+"],
+      HH.button [HE.onClick (const Skip)] 
+                [HH.text "⇒"],
       HH.div [HP.id "vol"] 
              [HH.text (show vol ◇ "%")]
     ]
@@ -78,6 +80,7 @@ app = H.mkComponent { initialState, render, eval }
   init ω = H.modify_ _ {cmus = ω, screen = Library}
   handleAction α = case α of
     Play     → handleNet catch noop getPlay
+    Skip     → handleNet catch noop getSkip
     Vol n    → handleNet catch (\ω → H.modify_ _ {vol = ω}) (getVol n)
     Switch ω → H.modify_ _ {screen = ω}
     Init     → handleNet catch init getCmus
