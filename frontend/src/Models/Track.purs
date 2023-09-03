@@ -1,4 +1,4 @@
-module Models (Cmus(..), Track(..), parseCmus, parseTracks) where
+module Models.Track (Track(..), parseTracks) where
 
 import Prelude (($))
 import Control.Monad.Error.Class (class MonadError, liftEither)
@@ -6,15 +6,6 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe)
 import Simple.JSON (readJSON)
 import Helpers ((◇))
-
-type Cmus = {
- library ∷ Array Track
-}
-
-parseCmus ∷ ∀ m. MonadError String m ⇒ String → m Cmus
-parseCmus α = liftEither $ case readJSON α of
-  Right (r ∷ Cmus) → Right r
-  Left _           → Left $ "Error parsing " ◇ α
 
 type Track = {
   key ∷ Int,
@@ -33,3 +24,4 @@ parseTracks ∷ ∀ m. MonadError String m ⇒ String → m (Array Track)
 parseTracks α = liftEither $ case readJSON α of
   Right (r ∷ Array Track) → Right r
   Left _                  → Left $ "Error parsing " ◇ α
+

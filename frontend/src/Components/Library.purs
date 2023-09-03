@@ -8,7 +8,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Type.Proxy (Proxy(..))
 import Helpers ((◇))
-import Models (Track)
+import Models.Track (Track)
 
 _library = Proxy ∷ Proxy "library"
 

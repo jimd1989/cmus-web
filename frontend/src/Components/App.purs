@@ -14,7 +14,7 @@ import Halogen.HTML.Properties as HP
 import Components.Library (library, _library)
 import Components.Queue (queue, _queue)
 import Helpers ((◇))
-import Models (Cmus)
+import Models.Cmus (Cmus)
 import Network (getCmus, getPlay, getVol, handleNet)
 import Types (Config)
 

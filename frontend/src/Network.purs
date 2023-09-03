@@ -13,7 +13,8 @@ import Data.Maybe (fromMaybe)
 import Data.Profunctor.Choice ((+++), (|||))
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Helpers ((∘), (◇), (⊙), (◀))
-import Models (Cmus, Track, parseCmus, parseTracks)
+import Models.Cmus (Cmus, parseCmus)
+import Models.Track (Track, parseTracks)
 import Types (Config)
 
 body ∷ ∀ m r. MonadError String m ⇒ Either Error {body ∷ String | r} → m String
