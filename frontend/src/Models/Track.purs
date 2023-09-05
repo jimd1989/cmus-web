@@ -1,4 +1,4 @@
-module Models.Track (Track(..), parseTracks) where
+module Models.Track (TagLens, Track(..), parseTracks) where
 
 import Prelude (($))
 import Control.Monad.Error.Class (class MonadError, liftEither)
@@ -6,6 +6,8 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe)
 import Simple.JSON (readJSON)
 import Helpers ((◇))
+
+type TagLens = Track → Maybe String
 
 type Track = {
   key ∷ Int,

@@ -26,6 +26,7 @@ to generate this file without the comments in this block.
   , "maybe"
   , "newtype"
   , "nonempty"
+  , "ordered-collections"
   , "prelude"
   , "profunctor"
   , "simple-json"
