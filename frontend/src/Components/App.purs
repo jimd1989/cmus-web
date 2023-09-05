@@ -5,12 +5,13 @@ import Control.Monad.Reader.Class (class MonadAsk)
 import Data.Eq (class Eq, (==))
 import Data.Function (const)
 import Data.Maybe (Maybe(..))
-import Data.Unit (unit)
+import Data.Unit (Unit, unit)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Components.Error (error, _error)
 import Components.Library (library, _library)
 import Components.Queue (queue, _queue)
 import Helpers ((◇))
@@ -21,7 +22,7 @@ import Types (Config)
 data Screen = Loading | Library | Queue
 derive instance eqScreen ∷ Eq Screen
 
-data Action = Init | Play | Skip | Vol Int | Switch Screen
+data Action = Init | Play | Skip | Vol Int | Switch Screen | CloseErr Unit
 
 type AppState = {
   cmus ∷ Cmus,
@@ -46,7 +47,7 @@ app = H.mkComponent { initialState, render, eval }
       initialize = Just Init
     }
   initialState = const emptyAppState
-  render { vol, screen, cmus } = HH.div [HP.id "app"] [
+  render { vol, screen, cmus, err } = HH.div [HP.id "app"] [
     HH.div [HP.id "top-menu"] [
       HH.button [HE.onClick (const $ Switch Library),
                  HP.classes [activeButton Library screen]] 
@@ -55,6 +56,7 @@ app = H.mkComponent { initialState, render, eval }
                  HP.classes [activeButton Queue screen]] 
                 [HH.text "≡"]
     ],
+    renderErr err,
     HH.div [HP.id "screens"] [renderScreen screen cmus],
     HH.div [HP.id "menu"] [
       HH.button [HE.onClick (const $ Vol (bounds $ vol - 5))] 
@@ -69,9 +71,11 @@ app = H.mkComponent { initialState, render, eval }
              [HH.text (show vol ◇ "%")]
     ]
   ]
+  renderErr Nothing  = HH.span_ []
+  renderErr (Just α) = HH.slot _error unit error α CloseErr
   renderScreen α ω = case α of
-    Library → HH.slot_ _library 0 library (ω.library)
-    Queue   → HH.slot_ _queue 0 queue unit
+    Library → HH.slot_ _library unit library (ω.library)
+    Queue   → HH.slot_ _queue unit queue unit
     Loading → HH.div [HP.id "loading"] [HH.h2_ [HH.text "Connecting ..."]]
   activeButton α ω | α == ω = HH.ClassName "screen-active"
   activeButton _ _          = HH.ClassName "screen-inactive"
@@ -79,11 +83,12 @@ app = H.mkComponent { initialState, render, eval }
   catch ω = H.modify_ _ {err = Just ω}
   init ω = H.modify_ _ {cmus = ω, screen = Library}
   handleAction α = case α of
-    Play     → handleNet catch noop getPlay
-    Skip     → handleNet catch noop getSkip
-    Vol n    → handleNet catch (\ω → H.modify_ _ {vol = ω}) (getVol n)
-    Switch ω → H.modify_ _ {screen = ω}
-    Init     → handleNet catch init getCmus
+    Play       → handleNet catch noop getPlay
+    Skip       → handleNet catch noop getSkip
+    Vol n      → handleNet catch (\ω → H.modify_ _ {vol = ω}) (getVol n)
+    Switch ω   → H.modify_ _ {screen = ω}
+    Init       → handleNet catch init getCmus
+    CloseErr _ → H.modify_ _ {err = Nothing}
       
 bounds ∷ Int → Int
 bounds n | n < 0   = 0
