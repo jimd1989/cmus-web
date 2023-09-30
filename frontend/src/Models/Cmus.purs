@@ -15,5 +15,3 @@ parseCmus ∷ ∀ m. MonadError String m ⇒ String → m Cmus
 parseCmus α = liftEither $ case readJSON α of
   Right (r ∷ Cmus) → Right r
   Left _           → Left $ "Error parsing " ◇ α
-
-
