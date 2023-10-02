@@ -1,7 +1,8 @@
 module Components.Menu where
 
-import Prelude (($), map, not)
+import Prelude (($), (>>=), identity, map, not, pure)
 import Data.Function (const)
+import Data.Map (update)
 import Data.Maybe (fromMaybe)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
@@ -10,11 +11,33 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Type.Proxy (Proxy(..))
-import Helpers ((◇))
+import Helpers ((◇), (∘))
 import Models.Menu (Header(..), Menu(..), Tracks(..))
 import Models.LibView (LibHead(..), LibLeaf(..), LibNode(..), LibView(..))
 
 --tracks ∷ ∀ q i o m. H.Component q i o m
+
+data ParentAction = Toggle | Update Header
+
+parent ∷ ∀ q m. H.Component q (Header) Header m
+parent = H.mkComponent { initialState, render, eval }
+  where
+    eval = H.mkEval H.defaultEval {
+      handleAction = handleAction
+    }
+    initialState = identity
+    render (Header { collapsed, title, children }) = case collapsed of
+      true  → HH.li [HE.onClick (const Toggle)] [HH.text title]
+      false → HH.li [HE.onClick (const Toggle)] [HH.text title]
+    toggle  (Header α) = Header $ α { collapsed = not α.collapsed }
+    update' (Header c) (Header α) = Header $ case α.children of
+      MenuTracks _ → α
+      MenuParent ω → α { 
+        children = MenuParent $ update (pure ∘ Header ∘ const c) c.title ω 
+      }
+    handleAction α = case α of
+      Toggle   → H.modify toggle >>= H.raise
+      Update ω → H.modify (update' ω) >>= H.raise
 
 
 --type LibSlot = ∀ q. H.Slot q Void Unit
