@@ -52,7 +52,7 @@ defaultOrder ∷ NonEmpty List TagLens
 defaultOrder = (_.albumArtist) :| (_.album) : Nil
 
 defaultLib ∷ Menu
-defaultLib = MenuTracks $ Tracks {collapsed: true, title: "", contents: []}
+defaultLib = MenuTracks $ Tracks {contents: []}
 
 app ∷ ∀ q o i m. MonadAsk Config m ⇒ MonadAff m ⇒ H.Component q i o m
 app = H.mkComponent { initialState, render, eval }

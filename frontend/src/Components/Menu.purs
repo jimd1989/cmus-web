@@ -1,8 +1,9 @@
 module Components.Menu where
 
 import Prelude (($), (>>=), identity, map, not, pure)
+import Data.Array (fromFoldable)
 import Data.Function (const)
-import Data.Map (update)
+import Data.Map (update, values)
 import Data.Maybe (fromMaybe)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
@@ -13,13 +14,22 @@ import Halogen.HTML.Properties as HP
 import Type.Proxy (Proxy(..))
 import Helpers ((◇), (∘))
 import Models.Menu (Header(..), Menu(..), Tracks(..))
+import Models.Track (Track)
 import Models.LibView (LibHead(..), LibLeaf(..), LibNode(..), LibView(..))
 
---tracks ∷ ∀ q i o m. H.Component q i o m
+tracks ∷ ∀ q o m. H.Component q Tracks o m
+tracks = H.mkComponent { initialState, render, eval }
+  where
+    eval = H.mkEval H.defaultEval
+    initialState = identity
+    render (Tracks { contents }) = HH.ul_ $ map renderTrack contents
+
+renderTrack ∷ ∀ a m. Track → H.ComponentHTML a () m
+renderTrack α = HH.li_ [HH.text $ fromMaybe "" α.title]
 
 data ParentAction = Toggle | Update Header
 
-parent ∷ ∀ q m. H.Component q (Header) Header m
+parent ∷ ∀ q m. H.Component q Header Header m
 parent = H.mkComponent { initialState, render, eval }
   where
     eval = H.mkEval H.defaultEval {
@@ -28,7 +38,7 @@ parent = H.mkComponent { initialState, render, eval }
     initialState = identity
     render (Header { collapsed, title, children }) = case collapsed of
       true  → HH.li [HE.onClick (const Toggle)] [HH.text title]
-      false → HH.li [HE.onClick (const Toggle)] [HH.text title]
+      false → HH.li [HE.onClick (const Toggle)] [HH.text title, renderMenu children]
     toggle  (Header α) = Header $ α { collapsed = not α.collapsed }
     update' (Header c) (Header α) = Header $ case α.children of
       MenuTracks _ → α
@@ -39,6 +49,31 @@ parent = H.mkComponent { initialState, render, eval }
       Toggle   → H.modify toggle >>= H.raise
       Update ω → H.modify (update' ω) >>= H.raise
 
+_header = Proxy ∷ Proxy "header"
+type HeaderSlot = ∀ q. H.Slot q Header Unit
+
+_tracks = Proxy ∷ Proxy "tracks"
+type TracksSlot = ∀ q. H.Slot q Void Unit
+
+type Slots = (header ∷ HeaderSlot, tracks ∷ TracksSlot)
+
+renderMenu ∷ ∀ m. Menu → H.ComponentHTML ParentAction Slots m
+renderMenu (MenuTracks α) = HH.slot_ _tracks unit tracks α
+renderMenu (MenuParent α) = HH.ul_ $ fromFoldable $ map (\x → HH.slot _header unit parent x Update) (values α)
+
+topMenu ∷ ∀ q m. H.Component q Menu Menu m
+topMenu = H.mkComponent { initialState, render, eval }
+  where
+    eval = H.mkEval H.defaultEval
+    initialState = identity
+    render = renderMenu
+    -- NEED TO HANDLE ACTIONS: handleAction (Update α) = H.raise 
+
+
+--renderLibView ∷ ∀ a m. LibView → H.ComponentHTML a Slots m
+--renderLibView (Head α) = HH.slot_ _libHead unit libHead α
+--renderLibView (Leaf α) = HH.slot_ _libLeaf unit libLeaf α
+--renderLibView (Node α) = HH.slot_ _libNode unit libNode α
 
 --type LibSlot = ∀ q. H.Slot q Void Unit
 --type Slots = (libHead ∷ LibSlot, libLeaf ∷ LibSlot, libNode ∷ LibSlot)
@@ -76,9 +111,3 @@ parent = H.mkComponent { initialState, render, eval }
 --      false → HH.div_ $ [HH.div [HE.onClick (const Hide)] [HH.text $ fromMaybe "" header]] ◇ (map renderLibView children)
 --    handleAction Hide = H.modify_ \α → α { hidden = not α.hidden }
 --
---renderLibView ∷ ∀ a m. LibView → H.ComponentHTML a Slots m
---renderLibView (Head α) = HH.slot_ _libHead unit libHead α
---renderLibView (Leaf α) = HH.slot_ _libLeaf unit libLeaf α
---renderLibView (Node α) = HH.slot_ _libNode unit libNode α
-
-

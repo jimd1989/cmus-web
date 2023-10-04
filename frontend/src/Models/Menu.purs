@@ -22,8 +22,6 @@ newtype Header = Header {
 }
 
 newtype Tracks = Tracks {
-  collapsed ∷ Boolean,
-  title ∷ String,
   contents ∷ Array Track
 }
 
@@ -42,4 +40,4 @@ men' Nil   ω title = Header { collapsed: true, title, children: tracks title ω
 men' (α:β) ω title = Header { collapsed: true, title, children: men (α :| β) ω }
 
 tracks ∷ String → Array Track → Menu
-tracks title contents = MenuTracks $ Tracks {collapsed: true, title, contents}
+tracks title contents = MenuTracks $ Tracks { contents }
